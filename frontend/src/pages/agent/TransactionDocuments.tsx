@@ -34,6 +34,26 @@ export function AgentTransactionDocumentsPage() {
   const selectedDocument =
     documents.find((document) => document.id === selectedDocumentId) ?? documents[0] ?? null;
 
+  useEffect(() => {
+    setOverrideMessage(null);
+    setOverrideError(null);
+
+    if (!selectedDocument?.summaryJson) {
+      setSummaryTlDr(selectedDocument?.summaryTlDr ?? "");
+      setWhatThisIs("");
+      setWatchFor("");
+      setAskYourAgent("");
+      setPlainEnglish("");
+      return;
+    }
+
+    setSummaryTlDr(selectedDocument.summaryTlDr ?? "");
+    setWhatThisIs(selectedDocument.summaryJson.whatThisIs);
+    setWatchFor(selectedDocument.summaryJson.watchFor.join("\n"));
+    setAskYourAgent(selectedDocument.summaryJson.askYourAgent.join("\n"));
+    setPlainEnglish(selectedDocument.summaryJson.plainEnglishFullText);
+  }, [selectedDocument]);
+
   if (!token) {
     return <Navigate to="/agent/login" replace />;
   }
@@ -57,26 +77,6 @@ export function AgentTransactionDocumentsPage() {
   }
 
   const transaction = documentsQuery.data.transaction;
-
-  useEffect(() => {
-    setOverrideMessage(null);
-    setOverrideError(null);
-
-    if (!selectedDocument?.summaryJson) {
-      setSummaryTlDr(selectedDocument?.summaryTlDr ?? "");
-      setWhatThisIs("");
-      setWatchFor("");
-      setAskYourAgent("");
-      setPlainEnglish("");
-      return;
-    }
-
-    setSummaryTlDr(selectedDocument.summaryTlDr ?? "");
-    setWhatThisIs(selectedDocument.summaryJson.whatThisIs);
-    setWatchFor(selectedDocument.summaryJson.watchFor.join("\n"));
-    setAskYourAgent(selectedDocument.summaryJson.askYourAgent.join("\n"));
-    setPlainEnglish(selectedDocument.summaryJson.plainEnglishFullText);
-  }, [selectedDocument]);
 
   async function handleOverrideSave() {
     if (!selectedDocument) {
