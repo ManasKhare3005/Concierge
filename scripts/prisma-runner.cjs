@@ -18,7 +18,11 @@ const finalArgs = receivedArgs.includes("--schema")
 
 const child = spawn(process.execPath, [prismaBinPath, ...finalArgs], {
   cwd: backendRoot,
-  env: process.env,
+  env: {
+    ...process.env,
+    RUST_BACKTRACE: process.env.RUST_BACKTRACE ?? "1",
+    RUST_LOG: process.env.RUST_LOG ?? "info"
+  },
   stdio: "inherit"
 });
 

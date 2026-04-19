@@ -9,5 +9,9 @@ backend/prisma/dev.db
 backend/prisma/dev.db-journal
 backend/prisma/dev.db-shm
 backend/prisma/dev.db-wal
+backend/prisma/**/*.db
+backend/prisma/**/*.db-journal
+backend/prisma/**/*.db-shm
+backend/prisma/**/*.db-wal
 
 frontend/.vite/

@@ -21,7 +21,7 @@ export function getStartupDiagnostics(): StartupDiagnostics {
     envFile: loadedPath,
     port: Number(process.env.PORT ?? 4000),
     clientOrigin: process.env.CLIENT_ORIGIN ?? "http://localhost:5173",
-    databaseUrl: process.env.DATABASE_URL ?? "file:./prisma/dev.db",
+    databaseUrl: process.env.DATABASE_URL ?? "file:./dev.db",
     services: [getAnthropicStatus(), getElevenLabsStatus(), getLoftyStatus()]
   };
 }
