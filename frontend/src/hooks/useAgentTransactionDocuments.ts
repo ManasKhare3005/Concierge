@@ -10,6 +10,8 @@ export interface AgentTransactionsResponse {
     propertyCity: string;
     propertyState: string;
     propertyZip: string;
+    propertyPrice?: number;
+    expectedCloseAt?: string;
     stage: string;
     stageLabel: string;
     role: string;
@@ -30,6 +32,8 @@ export interface AgentTransactionDocumentsResponse {
     propertyCity: string;
     propertyState: string;
     propertyZip: string;
+    propertyPrice?: number;
+    expectedCloseAt?: string;
     stage: string;
     stageLabel: string;
     role: string;

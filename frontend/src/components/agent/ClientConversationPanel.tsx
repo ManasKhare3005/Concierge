@@ -73,19 +73,29 @@ export function ClientConversationPanel({ session, token }: ClientConversationPa
   }
 
   return (
-    <Card>
+    <Card className="border-white/80">
       <CardHeader>
-        <div className="flex flex-wrap items-center gap-2">
-          <Badge className="border-teal-200 bg-teal-50 text-teal-800">{sessionLabel(session)}</Badge>
-          <AiBadge generatedBy={session.generatedBy} />
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="space-y-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <Badge className="border-teal-200 bg-teal-50 text-teal-800">{sessionLabel(session)}</Badge>
+              <AiBadge generatedBy={session.generatedBy} />
+            </div>
+            <div className="space-y-2">
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <PhoneCall className="h-5 w-5 text-primary" />
+                {session.clientName} conversation
+              </CardTitle>
+              <CardDescription>
+                This is the same Closing Day transcript the client sees in their transaction workspace. Use it to understand the concern before you call.
+              </CardDescription>
+            </div>
+          </div>
+          <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-3 text-right">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Concern count</p>
+            <p className="mt-2 text-2xl font-semibold text-slate-950">{session.topConcerns.length}</p>
+          </div>
         </div>
-        <CardTitle className="flex items-center gap-2 text-2xl">
-          <PhoneCall className="h-5 w-5 text-primary" />
-          {session.clientName} conversation
-        </CardTitle>
-        <CardDescription>
-          This is the same Closing Day transcript the client sees in their transaction workspace. Use it to understand the concern before you call.
-        </CardDescription>
       </CardHeader>
       <CardContent className="space-y-5">
         <div className="flex flex-wrap gap-2">
@@ -104,7 +114,7 @@ export function ClientConversationPanel({ session, token }: ClientConversationPa
         ) : null}
 
         {canEditSlots ? (
-          <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+          <div className="rounded-[24px] border border-teal-100 bg-teal-50/70 p-5">
             <div className="flex items-center gap-2">
               <CalendarClock className="h-4 w-4 text-primary" />
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">Meeting slots</p>
@@ -118,6 +128,7 @@ export function ClientConversationPanel({ session, token }: ClientConversationPa
                   <label className="text-sm font-medium text-slate-700">Option {index + 1}</label>
                   <Input
                     type="datetime-local"
+                    className="bg-white"
                     value={slotValue}
                     onChange={(event) =>
                       setSlotInputs((current) =>
@@ -155,7 +166,7 @@ export function ClientConversationPanel({ session, token }: ClientConversationPa
         ) : null}
 
         {session.clientNewQuestion ? (
-          <div className="rounded-[24px] border border-slate-200 bg-white p-5">
+          <div className="rounded-[24px] border border-amber-100 bg-amber-50/70 p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Final client note</p>
             <p className="mt-3 text-sm leading-7 text-slate-700">{session.clientNewQuestion}</p>
           </div>
@@ -184,7 +195,7 @@ export function ClientConversationPanel({ session, token }: ClientConversationPa
         </div>
 
         {session.prepBrief ? (
-          <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+          <div className="rounded-[24px] border border-sky-100 bg-sky-50/80 p-5">
             <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Prep brief</p>
             <p className="mt-3 text-sm leading-7 text-slate-700">{session.prepBrief.text}</p>
           </div>

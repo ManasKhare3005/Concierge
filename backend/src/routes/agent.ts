@@ -139,6 +139,8 @@ router.get("/transactions/:id/documents", requireAgentAuth, async (request, resp
       propertyCity: transaction.propertyCity,
       propertyState: transaction.propertyState,
       propertyZip: transaction.propertyZip,
+      propertyPrice: transaction.propertyPrice ?? undefined,
+      expectedCloseAt: transaction.expectedCloseAt?.toISOString(),
       stage: transaction.stage,
       stageLabel: transaction.stageLabel,
       role: transaction.role,

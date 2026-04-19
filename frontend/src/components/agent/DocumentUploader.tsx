@@ -104,21 +104,26 @@ export function DocumentUploader({ token, transactionId }: DocumentUploaderProps
   }
 
   return (
-    <Card>
+    <Card className="border-white/80">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-2xl">
-          <UploadCloud className="h-5 w-5 text-primary" />
-          Upload Document
-        </CardTitle>
-        <CardDescription>
-          Drag in a PDF, pick the document type, and Closing Day will extract text and generate a plain-English summary.
-        </CardDescription>
+        <div className="space-y-2">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Ingest a new file</p>
+          <CardTitle className="flex items-center gap-2 text-2xl">
+            <UploadCloud className="h-5 w-5 text-primary" />
+            Upload document
+          </CardTitle>
+          <CardDescription>
+            Drag in a PDF, pick the document type, and Closing Day will extract text and generate a plain-English summary.
+          </CardDescription>
+        </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div
           className={cn(
             "rounded-[28px] border border-dashed px-6 py-8 text-center transition",
-            isDragging ? "border-primary bg-teal-50" : "border-slate-300 bg-slate-50"
+            isDragging
+              ? "border-primary bg-teal-50 shadow-[0_12px_32px_rgba(15,79,76,0.12)]"
+              : "border-slate-300 bg-[radial-gradient(circle_at_top_left,_rgba(20,184,166,0.08),_transparent_30%),linear-gradient(180deg,_rgba(248,250,252,1)_0%,_rgba(241,245,249,0.92)_100%)]"
           )}
           onDragOver={(event) => {
             event.preventDefault();
@@ -145,19 +150,20 @@ export function DocumentUploader({ token, transactionId }: DocumentUploaderProps
         </div>
 
         <div className="grid gap-4 md:grid-cols-[1.3fr_0.7fr]">
-          <div className="space-y-2">
+          <div className="space-y-2 rounded-[24px] border border-slate-200 bg-slate-50 p-4">
             <label className="text-sm font-medium text-slate-700" htmlFor="document-title">
               Title
             </label>
             <Input
               id="document-title"
+              className="bg-white"
               placeholder="Inspection report - 4421 Olive St"
               value={title}
               onChange={(event) => setTitle(event.target.value)}
             />
           </div>
 
-          <div className="space-y-2">
+          <div className="space-y-2 rounded-[24px] border border-slate-200 bg-slate-50 p-4">
             <label className="text-sm font-medium text-slate-700" htmlFor="document-category">
               Category
             </label>
