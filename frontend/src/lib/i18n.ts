@@ -2,7 +2,7 @@ export type SupportedLanguage = "en" | "es";
 
 const clientCopy = {
   en: {
-    portfolioPhaseBadge: "Phase 7 trust layer live",
+    portfolioPhaseBadge: "Closing Day live portal",
     welcome: "Welcome",
     portfolioDescription:
       "Your documents, summaries, and live updates are ready. Closing Day keeps every AI explanation transparent and lets you pause the helper layer at any time.",

@@ -22,5 +22,5 @@ export function keywordSummary(text: string): string {
     return "This document outlines the contract terms, money deadlines, and contingencies.";
   }
 
-  return "This document contains transaction details that will be summarized more fully in Phase 3.";
+  return "This document contains transaction details that Closing Day will summarize into plain English for the client portal.";
 }

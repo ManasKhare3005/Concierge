@@ -250,7 +250,7 @@ export function AgentTriagePage() {
               <CardHeader className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-3">
-                    <Badge className="w-fit border-white/20 bg-white/10 text-white">Phase 5 realtime triage live</Badge>
+                    <Badge className="w-fit border-white/20 bg-white/10 text-white">Realtime triage live</Badge>
                     <Badge className="w-fit border-white/20 bg-white/10 text-white">
                       <RadioTower className="mr-1.5 h-3.5 w-3.5" />
                       {agentEvents.connectionState === "open"

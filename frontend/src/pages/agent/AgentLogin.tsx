@@ -61,7 +61,7 @@ export function AgentLoginPage() {
                 Agent workspace
               </CardTitle>
               <CardDescription className="text-base text-teal-50/90">
-                Phase 5 is live now. Sign in with the seeded demo account and land directly in the realtime triage board.
+                Sign in with the seeded demo account and land directly in the live triage board.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-teal-50/90">

@@ -816,7 +816,7 @@ async function seed(): Promise<void> {
     expiresAt: addDays(now, 21)
   });
 
-  logger.info("Phase 2 seed complete", {
+  logger.info("Demo seed complete", {
     agentEmail: agent.email,
     activeClients: 4,
     activeTransactions: 3,
