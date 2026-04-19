@@ -15,3 +15,6 @@ backend/prisma/**/*.db-shm
 backend/prisma/**/*.db-wal
 
 frontend/.vite/
+dev.log
+dev.err
+dev.pid
