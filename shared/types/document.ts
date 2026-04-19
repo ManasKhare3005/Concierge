@@ -36,4 +36,9 @@ export interface DocumentRecordSummary {
   questionCount: number;
   overriddenAt?: string;
   overriddenBy?: string;
+  transparency?: AiTransparency;
+}
+
+export interface DocumentRecordDetail extends DocumentRecordSummary {
+  textContent: string;
 }

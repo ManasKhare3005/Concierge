@@ -34,13 +34,14 @@ async function startServer(): Promise<void> {
     response.json({
       app: "Closing Day API",
       status: "ok",
-      phase: 2
+      phase: 3
     });
   });
 
   app.use("/api/diagnostics", diagnosticsRouter);
   app.use("/api/auth", authRouter);
   app.use("/api/agent", agentRouter);
+  app.use("/api/agent/documents", documentsRouter);
   app.use("/api/client", clientRouter);
   app.use("/api/documents", documentsRouter);
   app.use("/api/events", eventsRouter);

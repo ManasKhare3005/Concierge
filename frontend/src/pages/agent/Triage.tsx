@@ -1,13 +1,14 @@
 import { useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { BellRing, BriefcaseBusiness, LogOut, RadioTower, Users } from "lucide-react";
+import { BellRing, BriefcaseBusiness, FileStack, LogOut, RadioTower, Users } from "lucide-react";
 import { Link, Navigate } from "react-router-dom";
 
 import { AgentShell } from "@/components/agent/AgentShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useAgentTransactions } from "@/hooks/useAgentTransactionDocuments";
 import { api } from "@/lib/api";
 import { useAgentAuthStore } from "@/store/agentAuthStore";
 
@@ -39,6 +40,7 @@ interface AgentMeResponse {
 export function AgentTriagePage() {
   const token = useAgentAuthStore((state) => state.token);
   const logout = useAgentAuthStore((state) => state.logout);
+  const transactionsQuery = useAgentTransactions(token);
 
   const agentQuery = useQuery({
     queryKey: ["agent", "me", token],
@@ -64,7 +66,7 @@ export function AgentTriagePage() {
     return <Navigate to="/agent/login" replace />;
   }
 
-  if (agentQuery.isLoading) {
+  if (agentQuery.isLoading || transactionsQuery.isLoading) {
     return (
       <AgentShell>
         <div className="mx-auto max-w-5xl">
@@ -76,11 +78,12 @@ export function AgentTriagePage() {
     );
   }
 
-  if (agentQuery.isError || !agentQuery.data) {
+  if (agentQuery.isError || transactionsQuery.isError || !agentQuery.data) {
     return <Navigate to="/agent/login" replace />;
   }
 
   const { agent, counts, notifications } = agentQuery.data;
+  const transactions = transactionsQuery.data?.transactions ?? [];
 
   return (
     <motion.main initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -89,9 +92,9 @@ export function AgentTriagePage() {
           <Card className="overflow-hidden bg-primary text-white">
             <CardHeader className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div className="space-y-3">
-                <Badge className="w-fit border-white/20 bg-white/10 text-white">Phase 2 auth + seed live</Badge>
+                <Badge className="w-fit border-white/20 bg-white/10 text-white">Phase 3 documents live</Badge>
                 <CardTitle className="text-4xl text-white">
-                  Welcome back, {agent.firstName}. Your seeded demo workspace is ready.
+                  Welcome back, {agent.firstName}. Your document workspace is ready.
                 </CardTitle>
                 <CardDescription className="max-w-2xl text-base text-teal-50/90">
                   Logged in as {agent.email} for {agent.brokerage ?? "Closing Day demo brokerage"}.
@@ -114,7 +117,7 @@ export function AgentTriagePage() {
                 icon: BriefcaseBusiness,
                 title: "Active Transactions",
                 value: counts.activeTransactions,
-                body: "Seeded transactions currently in motion for the Phase 2 demo."
+                body: "Seeded transactions currently in motion for the document-pipeline demo."
               },
               {
                 icon: Users,
@@ -170,24 +173,37 @@ export function AgentTriagePage() {
 
             <Card>
               <CardHeader>
-                <CardTitle className="text-2xl">Next Phase Ready</CardTitle>
+                <CardTitle className="text-2xl">Document Workspaces</CardTitle>
                 <CardDescription>
-                  The auth shell is live now. Phase 3 will plug the document pipeline into these seeded records.
+                  Each active transaction now has a dedicated document workspace for upload, preview, and override.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 text-sm text-slate-600">
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                  Sarah and Marcus share the Tempe transaction and already have seeded documents, questions, and readiness.
-                </div>
-                <div className="rounded-2xl border border-slate-200 bg-white p-4">
-                  Maria is seeded in Spanish with a calm under-contract experience, and David is seeded as a seller.
-                </div>
-                <Button asChild variant="outline">
-                  <Link to="/">Back to system status</Link>
-                </Button>
+              <CardContent className="space-y-3 text-sm text-slate-600">
+                {transactions.map((transaction) => (
+                  <div key={transaction.id} className="rounded-2xl border border-slate-200 bg-white p-4">
+                    <div className="flex items-start justify-between gap-4">
+                      <div>
+                        <p className="font-semibold text-slate-900">{transaction.propertyAddress}</p>
+                        <p className="mt-1 text-sm text-slate-500">
+                          {transaction.stageLabel} | {transaction.documentCount} document{transaction.documentCount === 1 ? "" : "s"}
+                        </p>
+                      </div>
+                      <Button asChild variant="outline">
+                        <Link to={`/agent/transactions/${transaction.id}/documents`}>
+                          <FileStack className="mr-2 h-4 w-4" />
+                          Manage
+                        </Link>
+                      </Button>
+                    </div>
+                  </div>
+                ))}
               </CardContent>
             </Card>
           </div>
+
+          <Button asChild variant="outline">
+            <Link to="/">Back to system status</Link>
+          </Button>
         </div>
       </AgentShell>
     </motion.main>

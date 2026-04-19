@@ -111,10 +111,10 @@ export function ClientPortfolioPage() {
           <Card className="overflow-hidden">
             <CardHeader className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div className="space-y-3">
-                <Badge className="w-fit border-teal-200 bg-teal-50 text-teal-800">Phase 2 client portal live</Badge>
+                <Badge className="w-fit border-teal-200 bg-teal-50 text-teal-800">Phase 3 documents live</Badge>
                 <CardTitle className="text-4xl">Welcome, {client.firstName}.</CardTitle>
                 <CardDescription className="max-w-2xl text-base">
-                  Your seeded Closing Day portfolio is ready with transactions, documents, and future document AI hooks.
+                  Your seeded Closing Day portfolio is ready with live document previews and plain-English AI summaries.
                 </CardDescription>
               </div>
               <Button variant="outline" onClick={logout}>
@@ -198,6 +198,9 @@ export function ClientPortfolioPage() {
                       </span>
                     </p>
                   ) : null}
+                  <Button asChild className="w-full" variant="outline">
+                    <Link to={`/client/transactions/${transaction.id}/documents`}>Open documents</Link>
+                  </Button>
                 </CardContent>
               </Card>
             ))}
