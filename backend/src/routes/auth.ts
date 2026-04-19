@@ -6,6 +6,7 @@ import { signAgentSession, signClientSession } from "../lib/jwt";
 import { prisma } from "../lib/prisma";
 import { requireAgentAuth } from "../middleware/agentAuth";
 import { requireClientAuth } from "../middleware/clientAuth";
+import { parseSearchProfileJson } from "../services/clientProfile/preferences";
 import { issueMagicLinkPortal } from "../services/magicLink";
 
 const router = Router();
@@ -161,8 +162,10 @@ async function getClientPortfolioSnapshot(clientAccountId: string, accessibleTra
       email: client.email,
       firstName: client.firstName,
       lastName: client.lastName,
+      ...(client.phone ? { phone: client.phone } : {}),
       preferredLanguage: client.preferredLanguage,
-      hasPassword: Boolean(client.passwordHash)
+      hasPassword: Boolean(client.passwordHash),
+      ...(parseSearchProfileJson(client.searchProfileJson) ? { searchProfile: parseSearchProfileJson(client.searchProfileJson) } : {})
     },
     transactions: transactions.map((transaction) => ({
       id: transaction.id,
@@ -406,6 +409,7 @@ router.post("/client/set-password", requireClientAuth, async (request, response)
       email: client.email,
       firstName: client.firstName,
       lastName: client.lastName,
+      ...(client.phone ? { phone: client.phone } : {}),
       preferredLanguage: client.preferredLanguage,
       hasPassword: true
     }

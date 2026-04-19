@@ -143,10 +143,15 @@ export function ClientPortfolioPage() {
                   {copy.portfolioDescription}
                 </CardDescription>
               </div>
-              <Button variant="outline" onClick={logout}>
-                <LogOut className="mr-2 h-4 w-4" />
-                Log Out
-              </Button>
+              <div className="flex flex-wrap gap-3">
+                <Button asChild variant="outline">
+                  <Link to="/client/profile">{language === "es" ? "Perfil y busqueda" : "Profile & Search"}</Link>
+                </Button>
+                <Button variant="outline" onClick={logout}>
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log Out
+                </Button>
+              </div>
             </CardHeader>
             <CardContent className="grid gap-4 md:grid-cols-3">
               <div className="rounded-2xl border border-slate-200 bg-slate-50 p-4">

@@ -8,6 +8,7 @@ import { AgentTransactionDocumentsPage } from "@/pages/agent/TransactionDocument
 import { AgentTriagePage } from "@/pages/agent/Triage";
 import { ClientLoginPage } from "@/pages/client/ClientLogin";
 import { ClientPortfolioPage } from "@/pages/client/Portfolio";
+import { ClientProfilePage } from "@/pages/client/Profile";
 import { ClientTransactionDocumentsPage } from "@/pages/client/TransactionDocuments";
 import { LandingPage } from "@/pages/Landing";
 
@@ -24,6 +25,7 @@ export default function App() {
         <Route path="/agent/transactions/:transactionId/documents" element={<AgentTransactionDocumentsPage />} />
         <Route path="/client/login" element={<ClientLoginPage />} />
         <Route path="/client/portfolio" element={<ClientPortfolioPage />} />
+        <Route path="/client/profile" element={<ClientProfilePage />} />
         <Route path="/client/transactions/:transactionId/documents" element={<ClientTransactionDocumentsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

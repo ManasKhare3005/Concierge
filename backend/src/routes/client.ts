@@ -1,8 +1,15 @@
 import { Router } from "express";
 import { z } from "zod";
 
+import { initiateOutboundCall } from "../lib/elevenlabs";
 import { prisma } from "../lib/prisma";
 import { requireClientAuth } from "../middleware/clientAuth";
+import {
+  buildRecommendedPropertyMatches,
+  parseSearchProfileJson,
+  sanitizeClientSearchProfile,
+  serializeClientSearchProfile
+} from "../services/clientProfile/preferences";
 import { askTransactionQuestion, submitTransactionCheckIn } from "../services/clientPortal/engagement";
 import {
   mapQuestionRecord,
@@ -22,6 +29,60 @@ const askQuestionSchema = z.object({
 const checkInSchema = z.object({
   response: z.string().trim().min(3).max(600)
 });
+
+const clientSearchProfileSchema = z.object({
+  targetCities: z.array(z.string().trim().min(2).max(60)).max(8),
+  priceMin: z.number().int().positive().max(20_000_000).optional(),
+  priceMax: z.number().int().positive().max(20_000_000).optional(),
+  bedroomsMin: z.number().int().positive().max(12).optional(),
+  bathroomsMin: z.number().positive().max(12).optional(),
+  timeline: z.string().trim().max(120).optional(),
+  propertyStyle: z.string().trim().max(80).optional(),
+  mustHaves: z.array(z.string().trim().min(2).max(80)).max(8),
+  dealBreakers: z.array(z.string().trim().min(2).max(80)).max(8),
+  notes: z.string().trim().max(600).optional()
+});
+
+const updateProfileSchema = z.object({
+  firstName: z.string().trim().min(1).max(60),
+  lastName: z.string().trim().min(1).max(60),
+  phone: z
+    .string()
+    .trim()
+    .min(7)
+    .max(24)
+    .regex(/^\+?[0-9()\-\s]+$/)
+    .optional(),
+  preferredLanguage: z.enum(["en", "es"]),
+  searchProfile: clientSearchProfileSchema
+});
+
+function buildClientProfileResponse(client: {
+  id: string;
+  email: string;
+  firstName: string;
+  lastName: string;
+  phone: string | null;
+  preferredLanguage: string;
+  passwordHash: string | null;
+  searchProfileJson?: string | null;
+}) {
+  const searchProfile = parseSearchProfileJson(client.searchProfileJson);
+
+  return {
+    client: {
+      id: client.id,
+      email: client.email,
+      firstName: client.firstName,
+      lastName: client.lastName,
+      ...(client.phone ? { phone: client.phone } : {}),
+      preferredLanguage: client.preferredLanguage,
+      hasPassword: Boolean(client.passwordHash),
+      ...(searchProfile ? { searchProfile } : {})
+    },
+    recommendedProperties: buildRecommendedPropertyMatches(searchProfile)
+  };
+}
 
 router.get("/portfolio", requireClientAuth, async (request, response) => {
   const clientSession = request.clientSession;
@@ -80,6 +141,107 @@ router.get("/portfolio", requireClientAuth, async (request, response) => {
       documentCount: transaction.documents.length,
       readinessBucket: transaction.readiness[0]?.bucket ?? undefined
     }))
+  });
+});
+
+router.get("/profile", requireClientAuth, async (request, response) => {
+  const clientSession = request.clientSession;
+
+  if (!clientSession) {
+    response.status(401).json({ message: "Missing client session." });
+    return;
+  }
+
+  const client = await prisma.clientAccount.findUnique({
+    where: {
+      id: clientSession.clientAccountId
+    }
+  });
+
+  if (!client) {
+    response.status(404).json({ message: "Client account not found." });
+    return;
+  }
+
+  response.json(buildClientProfileResponse(client));
+});
+
+router.patch("/profile", requireClientAuth, async (request, response) => {
+  const clientSession = request.clientSession;
+
+  if (!clientSession) {
+    response.status(401).json({ message: "Missing client session." });
+    return;
+  }
+
+  const parsedBody = updateProfileSchema.safeParse(request.body);
+  if (!parsedBody.success) {
+    response.status(400).json({
+      message: "Invalid profile payload.",
+      issues: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  const searchProfile = sanitizeClientSearchProfile(parsedBody.data.searchProfile);
+
+  const client = await prisma.clientAccount.update({
+    where: {
+      id: clientSession.clientAccountId
+    },
+    data: {
+      firstName: parsedBody.data.firstName,
+      lastName: parsedBody.data.lastName,
+      phone: parsedBody.data.phone?.trim() || null,
+      preferredLanguage: parsedBody.data.preferredLanguage,
+      searchProfileJson: serializeClientSearchProfile(searchProfile),
+      profileUpdatedAt: new Date()
+    }
+  });
+
+  response.json({
+    message: "Profile saved.",
+    ...buildClientProfileResponse(client)
+  });
+});
+
+router.post("/profile/call-me", requireClientAuth, async (request, response) => {
+  const clientSession = request.clientSession;
+
+  if (!clientSession) {
+    response.status(401).json({ message: "Missing client session." });
+    return;
+  }
+
+  const client = await prisma.clientAccount.findUnique({
+    where: {
+      id: clientSession.clientAccountId
+    }
+  });
+
+  if (!client) {
+    response.status(404).json({ message: "Client account not found." });
+    return;
+  }
+
+  if (!client.phone) {
+    response.status(400).json({
+      message: "Add a phone number to your profile before requesting a call."
+    });
+    return;
+  }
+
+  const callResult = await initiateOutboundCall({
+    toNumber: client.phone,
+    sources: [
+      `client:${client.id}`,
+      `email:${client.email}`,
+      `profile:${client.searchProfileJson ? "complete" : "basic"}`
+    ]
+  });
+
+  response.status(callResult.success ? 200 : 202).json({
+    call: callResult
   });
 });
 

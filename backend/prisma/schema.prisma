@@ -29,6 +29,8 @@ model ClientAccount {
   lastName          String
   phone             String?
   preferredLanguage String       @default("en")
+  searchProfileJson String?
+  profileUpdatedAt  DateTime?
   createdAt         DateTime     @default(now())
   clientRoles       ClientRole[]
 }

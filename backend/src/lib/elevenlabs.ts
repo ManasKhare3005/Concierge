@@ -11,10 +11,24 @@ export interface SpeechSynthesisResult {
   transparency: AiTransparency;
 }
 
+export interface OutboundCallResult {
+  success: boolean;
+  message: string;
+  generatedBy: "elevenlabs" | "fallback";
+  transparency: AiTransparency;
+  conversationId?: string;
+  callSid?: string;
+}
+
 export interface SynthesizeSpeechOptions {
   text: string;
   sources: string[];
   fallbackText?: string;
+}
+
+export interface OutboundCallOptions {
+  toNumber: string;
+  sources: string[];
 }
 
 export function getElevenLabsStatus(): ServiceStatus {
@@ -29,7 +43,9 @@ export function getElevenLabsStatus(): ServiceStatus {
   return {
     name: "elevenlabs",
     state: "configured",
-    detail: `Configured for voice ${process.env.ELEVENLABS_VOICE_ID ?? "default"}.`
+    detail: process.env.ELEVENLABS_AGENT_ID && process.env.ELEVENLABS_AGENT_PHONE_NUMBER_ID
+      ? `Configured for voice ${process.env.ELEVENLABS_VOICE_ID ?? "default"} and outbound calling.`
+      : `Configured for voice ${process.env.ELEVENLABS_VOICE_ID ?? "default"}. Outbound calling is not configured yet.`
   };
 }
 
@@ -95,6 +111,80 @@ export async function synthesizeSpeech(
         "fallback",
         options.sources,
         options.fallbackText ?? "Voice synthesis failed, so transcript fallback will be shown instead."
+      )
+    };
+  }
+}
+
+export async function initiateOutboundCall(
+  options: OutboundCallOptions
+): Promise<OutboundCallResult> {
+  if (
+    !process.env.ELEVENLABS_API_KEY ||
+    !process.env.ELEVENLABS_AGENT_ID ||
+    !process.env.ELEVENLABS_AGENT_PHONE_NUMBER_ID
+  ) {
+    return {
+      success: false,
+      message:
+        "Outbound calling is not configured. Add ELEVENLABS_AGENT_ID and ELEVENLABS_AGENT_PHONE_NUMBER_ID after connecting a Twilio-backed number in ElevenLabs.",
+      generatedBy: "fallback",
+      transparency: buildTransparency(
+        "fallback",
+        options.sources,
+        "The ElevenLabs API key or outbound-calling identifiers are missing."
+      )
+    };
+  }
+
+  try {
+    const response = await axios.post<{
+      success: boolean;
+      message: string;
+      conversation_id?: string | null;
+      callSid?: string | null;
+    }>(
+      "https://api.elevenlabs.io/v1/convai/twilio/outbound-call",
+      {
+        agent_id: process.env.ELEVENLABS_AGENT_ID,
+        agent_phone_number_id: process.env.ELEVENLABS_AGENT_PHONE_NUMBER_ID,
+        to_number: options.toNumber
+      },
+      {
+        headers: {
+          "xi-api-key": process.env.ELEVENLABS_API_KEY,
+          "Content-Type": "application/json"
+        },
+        timeout: 15000
+      }
+    );
+
+    return {
+      success: response.data.success,
+      message: response.data.message,
+      generatedBy: "elevenlabs",
+      transparency: buildTransparency(
+        "elevenlabs",
+        options.sources,
+        "A live outbound call was initiated through the ElevenLabs Twilio integration."
+      ),
+      ...(response.data.conversation_id ? { conversationId: response.data.conversation_id } : {}),
+      ...(response.data.callSid ? { callSid: response.data.callSid } : {})
+    };
+  } catch (error) {
+    logger.error("ElevenLabs outbound call failed", {
+      error: error instanceof Error ? error.message : error
+    });
+
+    return {
+      success: false,
+      message:
+        "Closing Day could not start the live outbound call. Check the ElevenLabs agent, phone number import, and outbound-call permissions.",
+      generatedBy: "fallback",
+      transparency: buildTransparency(
+        "fallback",
+        options.sources,
+        "The ElevenLabs outbound-call request failed and no live phone call was started."
       )
     };
   }

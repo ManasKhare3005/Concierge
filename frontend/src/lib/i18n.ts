@@ -98,7 +98,7 @@ const clientCopy = {
     languageToggleLabel: "Portal language"
   },
   es: {
-    portfolioPhaseBadge: "Capa de confianza de la fase 7",
+    portfolioPhaseBadge: "Portal de Closing Day",
     welcome: "Bienvenida",
     portfolioDescription:
       "Tus documentos, resumenes y actualizaciones en vivo ya estan listos. Closing Day siempre muestra cuando la IA esta activa y te deja pausar la ayuda cuando quieras.",

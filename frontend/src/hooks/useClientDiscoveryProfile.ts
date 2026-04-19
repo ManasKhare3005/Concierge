@@ -1,11 +1,9 @@
-import type { ClientSearchProfile } from "@shared";
+import type { ClientSearchProfile, RecommendedPropertyMatch } from "@shared";
 import { useQuery } from "@tanstack/react-query";
 
 import { api } from "@/lib/api";
 
-export interface ClientProfileResponse {
-  via: "password" | "magic_link";
-  saveProgressSuggested: boolean;
+export interface ClientDiscoveryProfileResponse {
   client: {
     id: string;
     email: string;
@@ -16,15 +14,16 @@ export interface ClientProfileResponse {
     hasPassword: boolean;
     searchProfile?: ClientSearchProfile;
   };
+  recommendedProperties: RecommendedPropertyMatch[];
 }
 
-export function useClientProfile(token: string | null) {
+export function useClientDiscoveryProfile(token: string | null) {
   return useQuery({
-    queryKey: ["client", "me", token],
+    queryKey: ["client", "discovery-profile", token],
     enabled: Boolean(token),
     retry: false,
     queryFn: async () => {
-      const response = await api.get<ClientProfileResponse>("/api/auth/client/me", {
+      const response = await api.get<ClientDiscoveryProfileResponse>("/api/client/profile", {
         headers: {
           Authorization: `Bearer ${token}`
         }

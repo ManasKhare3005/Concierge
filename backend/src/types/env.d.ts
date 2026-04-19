@@ -10,6 +10,8 @@ declare namespace NodeJS {
     ELEVENLABS_API_KEY?: string;
     ELEVENLABS_VOICE_ID?: string;
     ELEVENLABS_MODEL_ID?: string;
+    ELEVENLABS_AGENT_ID?: string;
+    ELEVENLABS_AGENT_PHONE_NUMBER_ID?: string;
     LOFTY_API_BASE_URL?: string;
     LOFTY_API_KEY?: string;
     LOFTY_TIMEOUT_MS?: string;
