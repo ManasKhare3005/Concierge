@@ -87,7 +87,7 @@ export function ClientConversationPanel({ session, token }: ClientConversationPa
                 {session.clientName} conversation
               </CardTitle>
               <CardDescription>
-                This is the same Closing Day transcript the client sees in their transaction workspace. Use it to understand the concern before you call.
+                This is the same Concierge transcript the client sees in their transaction workspace. Use it to understand the concern before you call.
               </CardDescription>
             </div>
           </div>
@@ -120,7 +120,7 @@ export function ClientConversationPanel({ session, token }: ClientConversationPa
               <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">Meeting slots</p>
             </div>
             <p className="mt-2 text-sm leading-6 text-slate-600">
-              These drive both the on-screen slot buttons and the booking line in the Closing Day transcript. All times are Arizona time.
+              These drive both the on-screen slot buttons and the booking line in the Concierge transcript. All times are Arizona time.
             </p>
             <div className="mt-4 grid gap-3">
               {slotInputs.map((slotValue, index) => (
@@ -186,7 +186,7 @@ export function ClientConversationPanel({ session, token }: ClientConversationPa
                 }`}
               >
                 <p className={`mb-2 text-xs font-semibold uppercase tracking-[0.16em] ${turn.speaker === "bot" ? "text-white/80" : "text-slate-500"}`}>
-                  {turn.speaker === "bot" ? "Closing Day" : session.clientFirstName}
+                  {turn.speaker === "bot" ? "Concierge" : session.clientFirstName}
                 </p>
                 <p>{turn.text}</p>
               </div>
@@ -206,3 +206,4 @@ export function ClientConversationPanel({ session, token }: ClientConversationPa
     </Card>
   );
 }
+

@@ -113,7 +113,7 @@ export function DocumentUploader({ token, transactionId }: DocumentUploaderProps
             Upload document
           </CardTitle>
           <CardDescription>
-            Drag in a PDF, pick the document type, and Closing Day will extract text and generate a plain-English summary.
+            Drag in a PDF, pick the document type, and Concierge will extract text and generate a plain-English summary.
           </CardDescription>
         </div>
       </CardHeader>
@@ -199,3 +199,4 @@ export function DocumentUploader({ token, transactionId }: DocumentUploaderProps
     </Card>
   );
 }
+

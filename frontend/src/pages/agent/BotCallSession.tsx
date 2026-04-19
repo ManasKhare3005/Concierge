@@ -55,7 +55,7 @@ function TranscriptCard({ session }: { session: VoiceBotSessionRecord }) {
             }`}
           >
             <p className={`mb-2 text-xs font-semibold uppercase tracking-[0.16em] ${turn.speaker === "bot" ? "text-white/80" : "text-slate-500"}`}>
-              {turn.speaker === "bot" ? "Closing Day bot" : "Client"}
+              {turn.speaker === "bot" ? "Concierge bot" : "Client"}
             </p>
             <p>{turn.text}</p>
           </div>
@@ -218,7 +218,7 @@ export function AgentBotCallSessionPage() {
                   <div>
                     <CardTitle className="text-4xl text-white">{session.clientFirstName} bot session</CardTitle>
                     <CardDescription className="mt-2 max-w-3xl text-base text-teal-50/90">
-                      {session.propertyAddress} is in {session.stageLabel.toLowerCase()}. Closing Day is narrowing the call so you only step in once the concern is clear and the meeting slot is ready.
+                      {session.propertyAddress} is in {session.stageLabel.toLowerCase()}. Concierge is narrowing the call so you only step in once the concern is clear and the meeting slot is ready.
                     </CardDescription>
                   </div>
                   <Button asChild type="button" variant="glass" className="hover:text-white">
@@ -282,7 +282,7 @@ export function AgentBotCallSessionPage() {
                         Booking Confirmed
                       </CardTitle>
                       <CardDescription className="text-emerald-900/80">
-                        Closing Day already locked the meeting and generated the prep brief for the agent follow-up.
+                        Concierge already locked the meeting and generated the prep brief for the agent follow-up.
                       </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -403,3 +403,4 @@ export function AgentBotCallSessionPage() {
     </>
   );
 }
+

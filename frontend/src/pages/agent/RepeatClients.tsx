@@ -141,10 +141,10 @@ export function AgentRepeatClientsPage() {
                 </div>
                 <CardTitle className="text-4xl text-white">Past wins are future pipeline.</CardTitle>
                 <CardDescription className="max-w-3xl text-base text-teal-50/90">
-                  Closing Day turns closed deals into a ranked follow-up list so equity growth, timing signals, and prior trust become visible revenue instead of forgotten CRM dust.
+                  Concierge turns closed deals into a ranked follow-up list so equity growth, timing signals, and prior trust become visible revenue instead of forgotten CRM dust.
                 </CardDescription>
               </div>
-              <Button className="border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white" variant="outline" onClick={logout}>
+              <Button className="hover:text-white" variant="glass" onClick={logout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 Log Out
               </Button>
@@ -195,7 +195,7 @@ export function AgentRepeatClientsPage() {
                 ) : (
                   <Card className="border-dashed border-slate-300 bg-slate-50">
                     <CardContent className="p-6 text-sm leading-7 text-slate-600">
-                      No clients in this tier right now. Closing Day will populate it as more closed deals and timing signals accumulate.
+                      No clients in this tier right now. Concierge will populate it as more closed deals and timing signals accumulate.
                     </CardContent>
                   </Card>
                 )}
@@ -207,3 +207,4 @@ export function AgentRepeatClientsPage() {
     </motion.main>
   );
 }
+

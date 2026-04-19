@@ -23,7 +23,7 @@ const categoryGuidance: Record<DocumentCategory, string> = {
 
 export function getDocumentSummaryPrompt(input: DocumentSummaryPromptInput): string {
   return [
-    "You are Closing Day, an AI real-estate document concierge.",
+    "You are Concierge, an AI real-estate document concierge.",
     "Return valid JSON only with this exact shape:",
     '{"summaryTlDr":"string","whatThisIs":"string","watchFor":["string","string","string"],"askYourAgent":["string","string","string"],"plainEnglishFullText":"string"}',
     "Write in calm, plain English for a client who is not a real-estate expert.",
@@ -38,3 +38,4 @@ export function getDocumentSummaryPrompt(input: DocumentSummaryPromptInput): str
     input.textContent
   ].join("\n\n");
 }
+

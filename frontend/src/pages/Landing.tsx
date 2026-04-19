@@ -22,7 +22,7 @@ export function LandingPage() {
           <CardHeader className="space-y-4">
             <Badge className="w-fit border-teal-200 bg-teal-50 text-teal-800">Phase 8 docs and final verification live</Badge>
             <CardTitle className="max-w-3xl text-4xl leading-tight md:text-5xl">
-              Closing Day gives agents live AI context before confusion becomes a lost deal.
+              Concierge gives agents live AI context before confusion becomes a lost deal.
             </CardTitle>
             <CardDescription className="max-w-2xl text-base text-slate-600">
               This fresh TypeScript rebuild now includes the full demo stack: agent and client auth, seeded transactions, document AI, live triage, simulated bot calls, repeat-client follow-up, and final delivery docs.
@@ -117,3 +117,4 @@ export function LandingPage() {
     </motion.main>
   );
 }
+

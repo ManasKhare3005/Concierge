@@ -100,7 +100,7 @@ export function TriageCard({ card, highlighted, onDraftText }: TriageCardProps) 
         <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Latest Question</p>
           <p className="mt-2 text-sm leading-6 text-slate-700">
-            {card.latestQuestionExcerpt ?? "No recent question yet. Closing Day is watching for the next client signal."}
+            {card.latestQuestionExcerpt ?? "No recent question yet. Concierge is watching for the next client signal."}
           </p>
           {card.latestQuestionSeverity ? (
             <p className="mt-2 text-xs font-medium text-slate-500">Severity {card.latestQuestionSeverity}</p>
@@ -135,7 +135,7 @@ export function TriageCard({ card, highlighted, onDraftText }: TriageCardProps) 
           </div>
         ) : card.pendingBotSessionId ? (
           <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
-            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Closing Day follow-up</p>
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Concierge follow-up</p>
             <p className="mt-2 text-sm leading-6 text-slate-700">
               The client has an active guided conversation. Open detail to review the transcript or adjust the meeting slots.
             </p>
@@ -158,3 +158,4 @@ export function TriageCard({ card, highlighted, onDraftText }: TriageCardProps) 
     </Card>
   );
 }
+

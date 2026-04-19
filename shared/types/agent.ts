@@ -10,7 +10,7 @@ export interface ServiceStatus {
 
 export interface AgentNotification {
   id: string;
-  type: "question_asked" | "sentiment_changed" | "bot_booked" | "document_opened";
+  type: "question_asked" | "sentiment_changed" | "bot_booked" | "bot_followup_started" | "document_opened";
   title: string;
   body: string;
   relatedId?: string;

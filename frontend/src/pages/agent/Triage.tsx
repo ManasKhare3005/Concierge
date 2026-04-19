@@ -270,12 +270,12 @@ export function AgentTriagePage() {
                 {
                   label: "Low-Touch Safe",
                   value: triageQuery.data.summary.clear + triageQuery.data.summary.needsLightTouch,
-                  body: "Clients Closing Day can keep moving with lighter intervention."
+                  body: "Clients Concierge can keep moving with lighter intervention."
                 },
                 {
                   label: "Client Bot Follow-Ups",
                   value: counts.pendingBotCalls,
-                  body: "Active Closing Day follow-ups that now live in the client transaction view."
+                  body: "Active Concierge follow-ups that now live in the client transaction view."
                 }
               ].map((item) => (
                 <Card key={item.label}>
@@ -325,3 +325,4 @@ export function AgentTriagePage() {
     </>
   );
 }
+

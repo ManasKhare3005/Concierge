@@ -205,8 +205,8 @@ export function ClientTransactionDocumentsPage() {
                   <p className="mt-2 text-sm leading-6 text-teal-50/85">
                     {voiceBotSession
                       ? language === "es"
-                        ? "Closing Day ya esta capturando el contexto para tu agente y manteniendo el historial en este mismo espacio."
-                        : "Closing Day is already capturing context for your agent and keeping the transcript inside this same workspace."
+                        ? "Concierge ya esta capturando el contexto para tu agente y manteniendo el historial en este mismo espacio."
+                        : "Concierge is already capturing context for your agent and keeping the transcript inside this same workspace."
                       : language === "es"
                         ? "Todavia no se activo un seguimiento guiado. Si una pregunta sube de tono, aparecera aqui automaticamente."
                         : "A guided follow-up has not been triggered yet. If a question turns high-stakes, it will appear here automatically."}
@@ -461,3 +461,4 @@ export function ClientTransactionDocumentsPage() {
     </motion.main>
   );
 }
+

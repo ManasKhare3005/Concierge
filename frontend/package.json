@@ -1,5 +1,5 @@
 {
-  "name": "@closing-day/frontend",
+  "name": "@concierge/frontend",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,7 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@closing-day/shared": "workspace:*",
+    "@concierge/shared": "workspace:*",
     "@hookform/resolvers": "^3.10.0",
     "@radix-ui/react-dialog": "^1.1.6",
     "@radix-ui/react-slot": "^1.1.2",
@@ -41,3 +41,4 @@
     "vite": "^6.2.0"
   }
 }
+

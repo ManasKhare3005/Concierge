@@ -28,9 +28,9 @@ export function AgentSettingsPage() {
               </CardDescription>
             </div>
             <Button
-              className="border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white"
+              className="hover:text-white"
               onClick={logout}
-              variant="outline"
+              variant="glass"
             >
               Log Out
             </Button>
@@ -52,7 +52,7 @@ export function AgentSettingsPage() {
               <p className="mt-1 text-sm text-emerald-100/90">Document explanations stay editable so no client-facing copy is locked in by automation.</p>
             </div>
             <div className="flex items-center md:justify-end">
-              <Button type="button" variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white" onClick={() => setNudgesPaused(!nudgesPaused)}>
+              <Button type="button" variant="glass" className="hover:text-white" onClick={() => setNudgesPaused(!nudgesPaused)}>
                 {nudgesPaused ? "Resume realtime nudges" : "Pause realtime nudges"}
               </Button>
             </div>
@@ -62,7 +62,7 @@ export function AgentSettingsPage() {
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Trust controls</CardTitle>
-            <CardDescription>Closing Day keeps agent override paths visible so automation never feels irreversible.</CardDescription>
+            <CardDescription>Concierge keeps agent override paths visible so automation never feels irreversible.</CardDescription>
           </CardHeader>
           <CardContent className="space-y-3 text-sm leading-6 text-slate-600">
             <p>Document summaries can be edited by the agent and the latest human-reviewed version appears in the client portal immediately.</p>
@@ -75,3 +75,4 @@ export function AgentSettingsPage() {
     </AgentShell>
   );
 }
+

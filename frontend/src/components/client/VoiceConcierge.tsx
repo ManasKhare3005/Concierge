@@ -21,10 +21,10 @@ interface VoiceConciergeProps {
 
 const copy = {
   en: {
-    title: "Closing Day follow-up",
+    title: "Concierge follow-up",
     emptyTitle: "No bot follow-up yet",
     emptyBody:
-      "If a question gets serious enough to need a calmer conversation, Closing Day will open a guided follow-up here and keep the transcript visible for your agent.",
+      "If a question gets serious enough to need a calmer conversation, Concierge will open a guided follow-up here and keep the transcript visible for your agent.",
     openBody:
       "This guided conversation captures your concern in plain language so your agent can step in with context instead of making you repeat everything.",
     bookedBody:
@@ -57,10 +57,10 @@ const copy = {
     finalQuestion: "Final note for agent"
   },
   es: {
-    title: "Seguimiento de Closing Day",
+    title: "Seguimiento de Concierge",
     emptyTitle: "Todavia no hay seguimiento",
     emptyBody:
-      "Si una pregunta necesita una conversacion mas guiada, Closing Day abrira un seguimiento aqui y mantendra el historial visible para tu agente.",
+      "Si una pregunta necesita una conversacion mas guiada, Concierge abrira un seguimiento aqui y mantendra el historial visible para tu agente.",
     openBody:
       "Esta conversacion guiada captura tu preocupacion en lenguaje claro para que tu agente entre con contexto y sin hacerte repetir todo.",
     bookedBody:
@@ -361,7 +361,7 @@ export function VoiceConcierge({ transactionId, token, language, session }: Voic
                   }`}
                 >
                   <p className={`mb-2 text-xs font-semibold uppercase tracking-[0.16em] ${turn.speaker === "bot" ? "text-white/80" : "text-slate-500"}`}>
-                    {turn.speaker === "bot" ? "Closing Day" : "You"}
+                    {turn.speaker === "bot" ? "Concierge" : "You"}
                   </p>
                   <p>{turn.text}</p>
                 </div>
@@ -381,3 +381,4 @@ export function VoiceConcierge({ transactionId, token, language, session }: Voic
     </>
   );
 }
+

@@ -244,7 +244,7 @@ export async function buildAgentTriage(agentId: string): Promise<AgentTriageResp
         bucket,
         reasoning:
           latestReadiness?.reasoning ??
-          "This client has activity in motion, but Closing Day has not yet captured enough signals to justify a stronger bucket.",
+          "This client has activity in motion, but Concierge has not yet captured enough signals to justify a stronger bucket.",
         topConcerns:
           topConcerns.length > 0
             ? topConcerns
@@ -347,3 +347,4 @@ export async function buildAgentTriage(agentId: string): Promise<AgentTriageResp
     }
   };
 }
+

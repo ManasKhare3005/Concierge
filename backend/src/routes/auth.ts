@@ -72,7 +72,9 @@ async function buildAgentSnapshot(agentId: string) {
     prisma.botCallSession.count({
       where: {
         agentId,
-        status: "pending"
+        status: {
+          in: ["pending", "in_progress"]
+        }
       }
     }),
     prisma.notification.findMany({

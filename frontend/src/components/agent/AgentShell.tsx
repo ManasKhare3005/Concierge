@@ -12,7 +12,7 @@ export function AgentShell({ children }: PropsWithChildren) {
     <div className="page-shell space-y-6">
       <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
         <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Closing Day</p>
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-slate-500">Concierge</p>
           <h1 className="mt-1 text-2xl font-semibold text-ink">Agent workspace</h1>
         </div>
 
@@ -57,3 +57,4 @@ export function AgentShell({ children }: PropsWithChildren) {
     </div>
   );
 }
+

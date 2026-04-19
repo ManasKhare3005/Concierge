@@ -25,8 +25,9 @@ export const useAgentAuthStore = create<AgentAuthState>()(
       }
     }),
     {
-      name: "closing-day-agent-auth",
+      name: "concierge-agent-auth",
       storage: createJSONStorage(() => localStorage)
     }
   )
 );
+

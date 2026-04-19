@@ -32,7 +32,7 @@ async function startServer(): Promise<void> {
 
   app.get("/api", (_request, response) => {
     response.json({
-      app: "Closing Day API",
+      app: "Concierge API",
       status: "ok",
       phase: 8
     });
@@ -50,7 +50,7 @@ async function startServer(): Promise<void> {
 
   const port = diagnostics.port;
   app.listen(port, () => {
-    logger.info("Closing Day backend listening", {
+    logger.info("Concierge backend listening", {
       port,
       clientOrigin: diagnostics.clientOrigin
     });
@@ -63,3 +63,4 @@ void startServer().catch((error: unknown) => {
   });
   process.exit(1);
 });
+

@@ -567,7 +567,7 @@ router.post("/transactions/:id/voice-bot/respond", requireClientAuth, async (req
 
     response.json({ session });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to advance the Closing Day follow-up.";
+    const message = error instanceof Error ? error.message : "Unable to advance the Concierge follow-up.";
     response.status(message.includes("not found") ? 404 : 400).json({ message });
   }
 });
@@ -610,7 +610,7 @@ router.post("/transactions/:id/voice-bot/confirm", requireClientAuth, async (req
 
     response.json({ session });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Unable to confirm the Closing Day meeting.";
+    const message = error instanceof Error ? error.message : "Unable to confirm the Concierge meeting.";
     response.status(message.includes("not found") ? 404 : 400).json({ message });
   }
 });
@@ -732,3 +732,4 @@ router.post("/transactions/:id/check-in", requireClientAuth, async (request, res
 });
 
 export { router as clientRouter };
+

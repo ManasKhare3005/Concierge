@@ -191,7 +191,7 @@ function buildFallbackCallResult(message: string, sources: string[]): OutboundCa
     generatedBy: "fallback",
     transparency: {
       sources,
-      note: "Fallback response: Closing Day staged the follow-up session, but no live outbound call was started."
+      note: "Fallback response: Concierge staged the follow-up session, but no live outbound call was started."
     }
   };
 }
@@ -688,7 +688,7 @@ export async function initiateAutomatedVoiceFollowUp(
         type: "bot_followup_started",
         title: `${client.firstName} triggered another bot follow-up signal`,
         body: trimToLength(
-          `Closing Day refreshed the existing follow-up session after a severity ${input.severity} question. Review the latest concern before reaching out.`,
+          `Concierge refreshed the existing follow-up session after a severity ${input.severity} question. Review the latest concern before reaching out.`,
           220
         ),
         relatedId: existingSession.id
@@ -743,7 +743,7 @@ export async function initiateAutomatedVoiceFollowUp(
         sources: callSources
       })
     : buildFallbackCallResult(
-        "Closing Day staged the voice follow-up, but the client does not have a phone number saved on their profile.",
+        "Concierge staged the voice follow-up, but the client does not have a phone number saved on their profile.",
         callSources
       );
 
@@ -768,8 +768,8 @@ export async function initiateAutomatedVoiceFollowUp(
       title: `${client.firstName} triggered an automatic bot follow-up`,
       body: trimToLength(
         callResult.success
-          ? `Closing Day started a live bot follow-up after a severity ${input.severity} question. Review the prep brief before you reassure the client about ${transaction.propertyAddress}.`
-          : `Closing Day staged a bot follow-up after a severity ${input.severity} question, but the live call did not start. ${callResult.message}`,
+          ? `Concierge started a live bot follow-up after a severity ${input.severity} question. Review the prep brief before you reassure the client about ${transaction.propertyAddress}.`
+          : `Concierge staged a bot follow-up after a severity ${input.severity} question, but the live call did not start. ${callResult.message}`,
         220
       ),
       relatedId: createdSession.id
@@ -932,7 +932,7 @@ export async function respondToClientVoiceBotSession(
   );
 
   if (!session) {
-    throw new Error("No active Closing Day follow-up is open for this transaction.");
+    throw new Error("No active Concierge follow-up is open for this transaction.");
   }
 
   const storedScript = parseStoredVoiceBotScript(session);
@@ -947,7 +947,7 @@ export async function respondToClientVoiceBotSession(
   });
 
   if (currentPresentation.canConfirmBooking) {
-    throw new Error("This Closing Day follow-up is ready to confirm a booking.");
+    throw new Error("This Concierge follow-up is ready to confirm a booking.");
   }
 
   const nextTranscript = advanceSimulatedCall(
@@ -1100,7 +1100,7 @@ export async function confirmVoiceBotSession(
       agentId: input.agentId,
       type: "bot_booked",
       title: `${session.clientAccount.firstName} booked through the voice bot`,
-      body: `Closing Day booked ${new Date(input.bookedSlot).toLocaleString()} and generated a prep brief for ${session.transaction.propertyAddress}.`,
+      body: `Concierge booked ${new Date(input.bookedSlot).toLocaleString()} and generated a prep brief for ${session.transaction.propertyAddress}.`,
       relatedId: session.id
     }
   });
@@ -1126,7 +1126,7 @@ export async function confirmClientVoiceBotSession(
   );
 
   if (!session) {
-    throw new Error("No active Closing Day follow-up is open for this transaction.");
+    throw new Error("No active Concierge follow-up is open for this transaction.");
   }
 
   const result = await confirmVoiceBotSession({
@@ -1190,3 +1190,4 @@ export async function updateVoiceBotSessionSlots(
 
   return hydrateVoiceBotSession(updatedSession, { includeAudio: false });
 }
+

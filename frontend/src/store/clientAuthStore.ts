@@ -33,8 +33,9 @@ export const useClientAuthStore = create<ClientAuthState>()(
       }
     }),
     {
-      name: "closing-day-client-auth",
+      name: "concierge-client-auth",
       storage: createJSONStorage(() => localStorage)
     }
   )
 );
+

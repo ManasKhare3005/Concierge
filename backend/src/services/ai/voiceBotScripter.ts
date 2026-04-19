@@ -58,8 +58,8 @@ function buildFallbackPlan(input: VoiceBotScripterInput): string[] {
 
   const opening =
     input.tone === "brief"
-      ? `Hi ${input.clientFirstName}, this is Closing Day calling for ${input.agentFirstName}. I saw questions around ${concernText} on ${input.propertyAddress}, and I wanted to hear what feels most urgent right now.`
-      : `Hi ${input.clientFirstName}, this is Closing Day calling on behalf of ${input.agentFirstName}. I know ${input.propertyAddress} is in the ${input.stageLabel.toLowerCase()} stage, and I saw concerns around ${concernText}. What feels heaviest right now?`;
+      ? `Hi ${input.clientFirstName}, this is Concierge calling for ${input.agentFirstName}. I saw questions around ${concernText} on ${input.propertyAddress}, and I wanted to hear what feels most urgent right now.`
+      : `Hi ${input.clientFirstName}, this is Concierge calling on behalf of ${input.agentFirstName}. I know ${input.propertyAddress} is in the ${input.stageLabel.toLowerCase()} stage, and I saw concerns around ${concernText}. What feels heaviest right now?`;
 
   const followUp =
     input.tone === "detailed"
@@ -108,3 +108,4 @@ export async function buildVoiceBotScript(
 
   return result;
 }
+

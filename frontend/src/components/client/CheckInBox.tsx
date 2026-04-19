@@ -17,7 +17,7 @@ import type { SupportedLanguage } from "@/lib/i18n";
 import { getClientCopy, translateReadinessBucket } from "@/lib/i18n";
 
 const checkInSchema = z.object({
-  response: z.string().trim().min(3, "Say a little more so Closing Day can read the tone accurately.").max(600)
+  response: z.string().trim().min(3, "Say a little more so Concierge can read the tone accurately.").max(600)
 });
 
 type CheckInValues = z.infer<typeof checkInSchema>;
@@ -170,3 +170,4 @@ export function CheckInBox({ transactionId, token, language, aiPaused, latestSen
     </>
   );
 }
+

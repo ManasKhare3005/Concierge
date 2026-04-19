@@ -286,7 +286,7 @@ export function AgentTransactionDocumentsPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm leading-6 text-slate-600">
-                Active Closing Day conversation threads you can inspect and tune before you step in.
+                Active Concierge conversation threads you can inspect and tune before you step in.
               </p>
             </CardContent>
           </Card>
@@ -525,7 +525,7 @@ export function AgentTransactionDocumentsPage() {
           {voiceBotSessions.length === 0 ? (
             <Card className="border-white/80">
               <CardContent className="p-8 text-sm leading-7 text-slate-600">
-                No Closing Day conversation has been triggered for this transaction yet. When a client question crosses into higher concern, the follow-up thread will appear here automatically.
+                No Concierge conversation has been triggered for this transaction yet. When a client question crosses into higher concern, the follow-up thread will appear here automatically.
               </CardContent>
             </Card>
           ) : (
@@ -566,3 +566,4 @@ export function AgentTransactionDocumentsPage() {
     </motion.main>
   );
 }
+

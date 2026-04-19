@@ -2,8 +2,8 @@ import jwt from "jsonwebtoken";
 
 import "../bootstrap/loadEnv";
 
-const sessionSecret = process.env.SESSION_SECRET ?? "closing-day-session-secret";
-const magicLinkSecret = process.env.MAGIC_LINK_SECRET ?? "closing-day-magic-secret";
+const sessionSecret = process.env.SESSION_SECRET ?? "concierge-session-secret";
+const magicLinkSecret = process.env.MAGIC_LINK_SECRET ?? "concierge-magic-secret";
 
 export interface AgentSessionPayload {
   type: "agent";
@@ -91,3 +91,4 @@ export function verifyMagicLink(token: string): MagicLinkPayload | null {
 
   return null;
 }
+

@@ -13,7 +13,7 @@ export interface StageQaPromptInput {
 
 export function getStageQaPrompt(input: StageQaPromptInput): string {
   return [
-    "You are Closing Day, an AI real-estate transaction concierge.",
+    "You are Concierge, an AI real-estate transaction concierge.",
     "Answer the client's question in plain English using the transaction context below.",
     "Return valid JSON only with this exact shape:",
     '{"answer":"string","nextStep":"string"}',
@@ -36,3 +36,4 @@ export function getStageQaPrompt(input: StageQaPromptInput): string {
       : "Document excerpt: none provided"
   ].join("\n\n");
 }
+

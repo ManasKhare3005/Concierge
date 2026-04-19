@@ -5,6 +5,7 @@ import { classifyQuestion } from "../ai/questionClassifier";
 import { computeReadiness } from "../ai/readinessComputer";
 import { analyzeClientSentiment } from "../ai/sentimentAnalyzer";
 import { answerTransactionQuestion } from "../ai/stageQA";
+import { initiateAutomatedVoiceFollowUp } from "../voiceBot/orchestrator";
 import { mapQuestionRecord, mapReadinessSnapshot, mapSentimentEntry } from "./repository";
 
 interface AskTransactionQuestionInput {
@@ -337,6 +338,20 @@ export async function askTransactionQuestion(input: AskTransactionQuestionInput)
     };
   });
 
+  const autoFollowUp =
+    classification.severity >= 3
+      ? await initiateAutomatedVoiceFollowUp({
+          agentId: transaction.agentId,
+          transactionId: transaction.id,
+          clientAccountId: input.clientAccountId,
+          severity: classification.severity,
+          triggeringQuestion: input.question,
+          topConcerns: readiness.snapshot.topConcerns,
+          agentPrepNote: classification.agentPrepNote,
+          recommendedAgentAction: readiness.snapshot.recommendedAgentAction
+        })
+      : undefined;
+
   return {
     agentId: transaction.agentId,
     transactionId: transaction.id,
@@ -344,7 +359,8 @@ export async function askTransactionQuestion(input: AskTransactionQuestionInput)
     question: mapQuestionRecord(persisted.question),
     sentiment: mapSentimentEntry(persisted.sentiment),
     readiness: mapReadinessSnapshot(persisted.readiness),
-    classificationLabel: `${classification.category}:${classification.severity}`
+    classificationLabel: `${classification.category}:${classification.severity}`,
+    ...(autoFollowUp ? { autoFollowUp } : {})
   };
 }
 

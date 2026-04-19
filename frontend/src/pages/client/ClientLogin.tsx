@@ -32,7 +32,7 @@ export function ClientLoginPage() {
   const form = useForm<ClientLoginValues>({
     resolver: zodResolver(clientLoginSchema),
     defaultValues: {
-      email: "sarah@closingday.demo",
+      email: "sarah@concierge.demo",
       password: "demo123"
     }
   });
@@ -89,7 +89,7 @@ export function ClientLoginPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-slate-600">
-              <p>Try Sarah Lee with sarah@closingday.demo / demo123.</p>
+              <p>Try Sarah Lee with sarah@concierge.demo / demo123.</p>
               <p>Maria, Marcus, and David are seeded too, along with real transaction records and document placeholders.</p>
             </CardContent>
           </Card>
@@ -157,3 +157,4 @@ export function ClientLoginPage() {
     </motion.main>
   );
 }
+

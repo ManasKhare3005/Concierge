@@ -79,7 +79,7 @@ function extractErrorDetail(error: unknown): { status?: string; message?: string
 
 function formatOutboundCallError(error: unknown): string {
   if (!axios.isAxiosError(error)) {
-    return "Closing Day could not start the live outbound call because the request failed before ElevenLabs returned a usable response.";
+    return "Concierge could not start the live outbound call because the request failed before ElevenLabs returned a usable response.";
   }
 
   const status = error.response?.status;
@@ -220,7 +220,7 @@ export async function initiateOutboundCall(
     return {
       success: false,
       message:
-        "Closing Day could not start the live outbound call because the phone number is not in a valid outbound format. Use a full international number or a 10-digit U.S. number.",
+        "Concierge could not start the live outbound call because the phone number is not in a valid outbound format. Use a full international number or a 10-digit U.S. number.",
       generatedBy: "fallback",
       transparency: buildTransparency(
         "fallback",
@@ -283,3 +283,4 @@ export async function initiateOutboundCall(
     };
   }
 }
+

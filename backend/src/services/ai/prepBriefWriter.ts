@@ -43,7 +43,7 @@ function buildFallbackPrepBrief(input: PrepBriefWriterInput): string {
     input.documentContext.length > 0 ? input.documentContext.slice(0, 2).join(" ") : "No document summary was available.";
 
   return trimToLength(
-    `${input.clientName} is in the ${input.stageLabel.toLowerCase()} stage for ${input.propertyAddress}. The biggest concerns surfaced by Closing Day are ${concernLine}. Their latest transaction question was: ${latestQuestion}. In the simulated call, the client emphasized: ${latestTranscript}. Start the live conversation by acknowledging the stress, narrowing the decision to the one or two issues that actually change risk, and framing a clear next step. Document context to keep in view: ${documentLine}`,
+    `${input.clientName} is in the ${input.stageLabel.toLowerCase()} stage for ${input.propertyAddress}. The biggest concerns surfaced by Concierge are ${concernLine}. Their latest transaction question was: ${latestQuestion}. In the simulated call, the client emphasized: ${latestTranscript}. Start the live conversation by acknowledging the stress, narrowing the decision to the one or two issues that actually change risk, and framing a clear next step. Document context to keep in view: ${documentLine}`,
     900
   );
 }
@@ -86,3 +86,4 @@ export async function writePrepBrief(
     transparency: result.transparency
   };
 }
+

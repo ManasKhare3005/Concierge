@@ -55,7 +55,7 @@ interface CallMeResponse {
 const pageCopy = {
   en: {
     badge: "Profile and search",
-    title: "Tell Closing Day what home fits your life.",
+    title: "Tell Concierge what home fits your life.",
     description:
       "Save your contact details and search preferences so we can surface better Arizona matches and, if configured, let the AI call you to refine your criteria.",
     back: "Back to Portfolio",
@@ -94,7 +94,7 @@ const pageCopy = {
   },
   es: {
     badge: "Perfil y busqueda",
-    title: "Dile a Closing Day que tipo de casa encaja contigo.",
+    title: "Dile a Concierge que tipo de casa encaja contigo.",
     description:
       "Guarda tus datos y preferencias para mostrar mejores opciones en Arizona y, si esta configurado, dejar que la IA te llame para afinar tu busqueda.",
     back: "Volver al portafolio",
@@ -132,14 +132,14 @@ const pageCopy = {
     callNeedsPhone: "Agrega un telefono antes de pedir una llamada.",
     aiFollowUpTitle: "Seguimiento con IA",
     aiFollowUpBody:
-      "Closing Day puede usar tu telefono guardado para iniciar una llamada guiada por IA cuando ElevenLabs tenga la llamada saliente configurada."
+      "Concierge puede usar tu telefono guardado para iniciar una llamada guiada por IA cuando ElevenLabs tenga la llamada saliente configurada."
   }
 } as const;
 
 const englishFollowUpCopy = {
   aiFollowUpTitle: "AI follow-up",
   aiFollowUpBody:
-    "Closing Day can use your saved phone number to start an AI-led discovery call when ElevenLabs outbound calling is configured."
+    "Concierge can use your saved phone number to start an AI-led discovery call when ElevenLabs outbound calling is configured."
 } as const;
 
 const localizedPageCopy = {
@@ -330,7 +330,9 @@ export function ClientProfilePage() {
     try {
       const response = await api.post<CallMeResponse>(
         "/api/client/profile/call-me",
-        {},
+        {
+          ...(phoneValue.trim() ? { phone: phoneValue.trim() } : {})
+        },
         {
           headers: {
             Authorization: `Bearer ${token}`
@@ -393,7 +395,7 @@ export function ClientProfilePage() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button className="w-full bg-white text-teal-900 hover:bg-white/90" disabled={isCalling} onClick={() => void handleCallMe()}>
+                <Button className="w-full text-teal-900 hover:text-teal-900" variant="white" disabled={isCalling} onClick={() => void handleCallMe()}>
                   {isCalling ? (
                     <>
                       <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
@@ -409,7 +411,7 @@ export function ClientProfilePage() {
                 {callMessage ? (
                   <div className="rounded-[20px] border border-white/20 bg-white/10 p-4 text-sm text-white">
                     <div className="mb-2 flex items-center gap-2">
-                      <Badge className="border-white/20 bg-white/10 text-white">
+                      <Badge variant="glass">
                         {callStatus === "elevenlabs" ? copy.liveCall : copy.fallbackCall}
                       </Badge>
                     </div>
@@ -583,3 +585,4 @@ export function ClientProfilePage() {
     </motion.main>
   );
 }
+

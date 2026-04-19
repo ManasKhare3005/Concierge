@@ -1,10 +1,10 @@
 # Design Rationale
 
-Closing Day is designed around one core belief: agent time is the scarce resource, not document storage. Every major product choice exists to protect agent hours, reduce deal risk, and keep AI in a support role rather than an autonomous one.
+Concierge is designed around one core belief: agent time is the scarce resource, not document storage. Every major product choice exists to protect agent hours, reduce deal risk, and keep AI in a support role rather than an autonomous one.
 
 ## 1. The product is organized around agent ROI
 
-Traditional transaction portals treat every client and every file as equally urgent. That creates busywork, not leverage. Closing Day reframes the problem into triage:
+Traditional transaction portals treat every client and every file as equally urgent. That creates busywork, not leverage. Concierge reframes the problem into triage:
 
 - Which client needs a live conversation now?
 - Which client can be handled with a short text?
@@ -14,7 +14,7 @@ That is why the main agent view is a readiness board instead of a document libra
 
 ## 2. Trust is a product feature, not a legal disclaimer
 
-Real estate agents are often skeptical of AI because they fear hallucinated guidance, loss of control, and awkward client-facing errors. Closing Day addresses that directly:
+Real estate agents are often skeptical of AI because they fear hallucinated guidance, loss of control, and awkward client-facing errors. Concierge addresses that directly:
 
 - Every AI output labels whether it came from a live model or a fallback path.
 - Every AI output includes a short transparency object with source context and a note.
@@ -49,7 +49,7 @@ Native SSE is a good fit here because the update pattern is mostly server-to-cli
 
 ## 5. Seeded realism matters for demo credibility
 
-A hackathon app that opens on an empty dashboard forces the demo to explain potential instead of showing outcomes. Closing Day starts with:
+A hackathon app that opens on an empty dashboard forces the demo to explain potential instead of showing outcomes. Concierge starts with:
 
 - one agent
 - four active clients across different readiness states
@@ -81,7 +81,7 @@ This keeps the feature aligned with the user story without turning the hackathon
 
 ## 8. Why this shape works for the pitch
 
-Closing Day is strongest when presented as a time-and-risk machine for agents:
+Concierge is strongest when presented as a time-and-risk machine for agents:
 
 - documents stop being black boxes
 - anxious clients get surfaced before they churn
@@ -90,3 +90,4 @@ Closing Day is strongest when presented as a time-and-risk machine for agents:
 - repeat-client opportunities stay visible after closing
 
 That combination makes the ROI story concrete: fewer lost deals, fewer reactive calls, and more deliberate use of agent attention.
+

@@ -8,7 +8,8 @@ export const errorHandler: ErrorRequestHandler = (error, _request, response, _ne
   });
 
   response.status(500).json({
-    message: "Closing Day hit an unexpected error.",
+    message: "Concierge hit an unexpected error.",
     detail: error instanceof Error ? error.message : "Unknown error"
   });
 };
+

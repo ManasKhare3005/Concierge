@@ -29,7 +29,7 @@ export function AgentLoginPage() {
   const form = useForm<AgentLoginValues>({
     resolver: zodResolver(agentLoginSchema),
     defaultValues: {
-      email: "james@closingday.demo",
+      email: "james@concierge.demo",
       password: "demo123"
     }
   });
@@ -65,7 +65,7 @@ export function AgentLoginPage() {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-teal-50/90">
-              <p>Seeded login: james@closingday.demo / demo123</p>
+              <p>Seeded login: james@concierge.demo / demo123</p>
               <p>The seeded data, live triage buckets, and realtime activity stream are all connected to the local SQLite demo.</p>
             </CardContent>
           </Card>
@@ -123,3 +123,4 @@ export function AgentLoginPage() {
     </motion.main>
   );
 }
+

@@ -41,7 +41,7 @@ body {
 }
 
 .glass-card {
-  @apply rounded-[28px] bg-white/85 shadow-glass backdrop-blur;
+  @apply rounded-[28px] shadow-glass backdrop-blur;
 }
 
 .page-shell {

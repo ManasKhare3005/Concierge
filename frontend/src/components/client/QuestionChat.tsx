@@ -17,7 +17,7 @@ import type { SupportedLanguage } from "@/lib/i18n";
 import { getClientCopy, translateQuestionCategory } from "@/lib/i18n";
 
 const askQuestionSchema = z.object({
-  question: z.string().trim().min(4, "Ask a little more so Closing Day has enough context.").max(1_200)
+  question: z.string().trim().min(4, "Ask a little more so Concierge has enough context.").max(1_200)
 });
 
 type AskQuestionValues = z.infer<typeof askQuestionSchema>;
@@ -231,3 +231,4 @@ export function QuestionChat({ transactionId, token, document, questions, langua
     </>
   );
 }
+

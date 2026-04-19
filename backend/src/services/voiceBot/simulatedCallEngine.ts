@@ -52,7 +52,7 @@ function countClientTurns(turns: BotScriptTurn[]): number {
 }
 
 export function buildInitialTranscript(plan: string[]): BotScriptTurn[] {
-  const opening = plan[0] ?? "Hi, this is Closing Day calling with a quick check-in before your agent follows up.";
+  const opening = plan[0] ?? "Hi, this is Concierge calling with a quick check-in before your agent follows up.";
   return [{ speaker: "bot", text: trimToLength(opening, 280) }];
 }
 
@@ -121,3 +121,4 @@ export function extractClientQuestion(text: string): string | undefined {
 
   return undefined;
 }
+

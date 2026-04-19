@@ -96,7 +96,7 @@ export function BotCallModal({
           </div>
           <DialogTitle>Start a focused call for {card.clientFirstName}</DialogTitle>
           <DialogDescription>
-            Closing Day will open with the client's biggest concerns, narrow the decision, and tee up a meeting slot
+            Concierge will open with the client's biggest concerns, narrow the decision, and tee up a meeting slot
             so you step into the real call already briefed.
           </DialogDescription>
         </DialogHeader>
@@ -205,3 +205,4 @@ export function BotCallModal({
     </Dialog>
   );
 }
+

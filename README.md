@@ -1,6 +1,6 @@
-# Closing Day
+# Concierge
 
-Closing Day is a full-stack real estate AI companion built for Lofty GlobeHack 2026. It gives agents a live triage dashboard and gives buyers or sellers a client-safe document portal with plain-English summaries, contextual Q&A, emotional-readiness tracking, and simulated voice-bot follow-up.
+Concierge is a full-stack real estate AI companion built for Lofty GlobeHack 2026. It gives agents a live triage dashboard and gives buyers or sellers a client-safe document portal with plain-English summaries, contextual Q&A, emotional-readiness tracking, and simulated voice-bot follow-up.
 
 The project is built as a strict TypeScript monorepo with React 18, Vite, Tailwind, Express, Prisma, SQLite, Server-Sent Events, Groq-backed AI services, and ElevenLabs voice synthesis.
 
@@ -57,7 +57,7 @@ The project is built as a strict TypeScript monorepo with React 18, Vite, Tailwi
 ## Monorepo Layout
 
 ```text
-closing-day/
+concierge/
 +-- backend/      Express API, Prisma schema, seed scripts, AI services, SSE
 +-- frontend/     React app for agent and client experiences
 +-- shared/       Shared TypeScript domain types
@@ -120,14 +120,14 @@ App URLs:
 
 Agent:
 
-- `james@closingday.demo / demo123`
+- `james@concierge.demo / demo123`
 
 Clients:
 
-- `sarah@closingday.demo / demo123`
-- `marcus@closingday.demo / demo123`
-- `maria@closingday.demo / demo123`
-- `david@closingday.demo / demo123`
+- `sarah@concierge.demo / demo123`
+- `marcus@concierge.demo / demo123`
+- `maria@concierge.demo / demo123`
+- `david@concierge.demo / demo123`
 
 ## Workspace Scripts
 
@@ -142,7 +142,7 @@ Clients:
 
 ### Real-time flow
 
-Closing Day uses native Server-Sent Events instead of polling as the primary live-update mechanism. Client actions such as document opens, questions, check-ins, agent overrides, and booked bot calls emit event-bus messages that invalidate the relevant React Query caches.
+Concierge uses native Server-Sent Events instead of polling as the primary live-update mechanism. Client actions such as document opens, questions, check-ins, agent overrides, and booked bot calls emit event-bus messages that invalidate the relevant React Query caches.
 
 ### AI transparency
 
@@ -196,3 +196,4 @@ The initial specification called for Anthropic Claude. On April 19, 2026, the im
 - [Design rationale](docs/DESIGN_RATIONALE.md)
 - [Pitch script](docs/PITCH_SCRIPT.md)
 - [AI tools used](docs/AI_TOOLS_USED.md)
+

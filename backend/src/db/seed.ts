@@ -57,7 +57,7 @@ async function seed(): Promise<void> {
 
   const agent = await prisma.agentAccount.create({
     data: {
-      email: "james@closingday.demo",
+      email: "james@concierge.demo",
       passwordHash: demoPasswordHash,
       firstName: "James",
       lastName: "Chen",
@@ -68,7 +68,7 @@ async function seed(): Promise<void> {
 
   const sarah = await prisma.clientAccount.create({
     data: {
-      email: "sarah@closingday.demo",
+      email: "sarah@concierge.demo",
       passwordHash: demoPasswordHash,
       firstName: "Sarah",
       lastName: "Lee",
@@ -80,7 +80,7 @@ async function seed(): Promise<void> {
 
   const marcus = await prisma.clientAccount.create({
     data: {
-      email: "marcus@closingday.demo",
+      email: "marcus@concierge.demo",
       passwordHash: demoPasswordHash,
       firstName: "Marcus",
       lastName: "Lee",
@@ -92,7 +92,7 @@ async function seed(): Promise<void> {
 
   const maria = await prisma.clientAccount.create({
     data: {
-      email: "maria@closingday.demo",
+      email: "maria@concierge.demo",
       passwordHash: demoPasswordHash,
       firstName: "Maria",
       lastName: "Gonzalez",
@@ -104,7 +104,7 @@ async function seed(): Promise<void> {
 
   const david = await prisma.clientAccount.create({
     data: {
-      email: "david@closingday.demo",
+      email: "david@concierge.demo",
       passwordHash: demoPasswordHash,
       firstName: "David",
       lastName: "Kim",
@@ -116,7 +116,7 @@ async function seed(): Promise<void> {
 
   const jennifer = await prisma.clientAccount.create({
     data: {
-      email: "jennifer@closingday.demo",
+      email: "jennifer@concierge.demo",
       passwordHash: demoPasswordHash,
       firstName: "Jennifer",
       lastName: "Walsh",
@@ -128,7 +128,7 @@ async function seed(): Promise<void> {
 
   const daniel = await prisma.clientAccount.create({
     data: {
-      email: "daniel@closingday.demo",
+      email: "daniel@concierge.demo",
       passwordHash: demoPasswordHash,
       firstName: "Daniel",
       lastName: "Cho",
@@ -736,7 +736,7 @@ async function seed(): Promise<void> {
       script: JSON.stringify([
         {
           speaker: "bot",
-          text: "Hi Sarah, this is Closing Day calling on behalf of James Chen. I wanted to make sure we understand your top concerns before James reaches out."
+          text: "Hi Sarah, this is Concierge calling on behalf of James Chen. I wanted to make sure we understand your top concerns before James reaches out."
         },
         {
           speaker: "client",
@@ -836,3 +836,4 @@ seed()
   .finally(async () => {
     await prisma.$disconnect();
   });
+

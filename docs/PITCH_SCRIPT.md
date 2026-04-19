@@ -4,7 +4,7 @@
 
 ### 0:00-0:25 - Open with the problem
 
-"Agents do not lose time because documents exist. They lose time because confused clients ask scattered questions across email, text, and late-night panic. Closing Day turns transaction confusion into a live, triaged workflow."
+"Agents do not lose time because documents exist. They lose time because confused clients ask scattered questions across email, text, and late-night panic. Concierge turns transaction confusion into a live, triaged workflow."
 
 Show the agent triage board and point out:
 
@@ -56,7 +56,7 @@ Edit a document summary and save it.
 
 From Sarah's triage card, click `Call with bot`.
 
-"When a real conversation is needed, Closing Day can start a simulated outbound AI call flow that captures concerns, offers meeting slots, and prepares the agent before the actual human conversation."
+"When a real conversation is needed, Concierge can start a simulated outbound AI call flow that captures concerns, offers meeting slots, and prepares the agent before the actual human conversation."
 
 Show:
 
@@ -73,14 +73,15 @@ Confirm the booking and open the resulting brief.
 
 Jump to Repeat Clients.
 
-"And the value does not stop at closing. Closing Day keeps past clients visible as follow-up opportunities instead of letting that equity and referral value disappear."
+"And the value does not stop at closing. Concierge keeps past clients visible as follow-up opportunities instead of letting that equity and referral value disappear."
 
 ### 2:55-3:00 - Close
 
-"Closing Day turns transaction confusion into agent leverage: fewer lost deals, fewer reactive calls, and more time spent where human judgment actually matters."
+"Concierge turns transaction confusion into agent leverage: fewer lost deals, fewer reactive calls, and more time spent where human judgment actually matters."
 
 ## Demo Accounts
 
-- Agent: `james@closingday.demo / demo123`
-- Client: `sarah@closingday.demo / demo123`
-- Spanish client: `maria@closingday.demo / demo123`
+- Agent: `james@concierge.demo / demo123`
+- Client: `sarah@concierge.demo / demo123`
+- Spanish client: `maria@concierge.demo / demo123`
+

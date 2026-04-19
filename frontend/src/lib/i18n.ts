@@ -2,10 +2,10 @@ export type SupportedLanguage = "en" | "es";
 
 const clientCopy = {
   en: {
-    portfolioPhaseBadge: "Closing Day live portal",
+    portfolioPhaseBadge: "Concierge live portal",
     welcome: "Welcome",
     portfolioDescription:
-      "Your documents, summaries, and live updates are ready. Closing Day keeps every AI explanation transparent and lets you pause the helper layer at any time.",
+      "Your documents, summaries, and live updates are ready. Concierge keeps every AI explanation transparent and lets you pause the helper layer at any time.",
     accessModeLabel: "Access Mode",
     accessMagicLink: "Magic link",
     accessPassword: "Email + password",
@@ -20,7 +20,7 @@ const clientCopy = {
     closedOnLabel: "Closed on",
     openDocuments: "Open documents",
     backToStatus: "Back to system status",
-    loadingPortfolio: "Loading your Closing Day portfolio...",
+    loadingPortfolio: "Loading your Concierge portfolio...",
     saveProgressTitle: "Save your progress",
     saveProgressBody:
       "You came in through a magic link. Set a password once and you can come back without needing a new link.",
@@ -37,7 +37,7 @@ const clientCopy = {
     trustBadgeOverride: "Agent override visible",
     trustBadgeWhy: "Why explanations included",
     trustBody:
-      "Closing Day always labels live AI vs fallback responses, shows why a summary or answer appeared, and keeps the agent override path visible.",
+      "Concierge always labels live AI vs fallback responses, shows why a summary or answer appeared, and keeps the agent override path visible.",
     trustPauseOn: "Pause AI help",
     trustPauseOff: "Resume AI help",
     trustPausedNotice:
@@ -65,14 +65,14 @@ const clientCopy = {
     questionChatDescription:
       "Ask what this document means, what happens next, or what should raise a flag. Higher-stakes judgment questions still route back to your agent.",
     questionChatEmpty:
-      "Ask the first question about this transaction or document. Closing Day will answer in context and flag the agent when the question moves into risk, judgment, or emotional territory.",
+      "Ask the first question about this transaction or document. Concierge will answer in context and flag the agent when the question moves into risk, judgment, or emotional territory.",
     questionChatPlaceholder:
       "Ask what this means, what happens next, or whether something should worry you.",
     questionChatFooter:
       "The answer uses the selected document and transaction context. Strategy calls still go back to your agent.",
     questionSending: "Sending...",
     questionAsk: "Ask Question",
-    questionTyping: "Closing Day is typing...",
+    questionTyping: "Concierge is typing...",
     questionRouted: "Routed to agent",
     questionNextStep: "Next step",
     questionPaused:
@@ -98,10 +98,10 @@ const clientCopy = {
     languageToggleLabel: "Portal language"
   },
   es: {
-    portfolioPhaseBadge: "Portal de Closing Day",
+    portfolioPhaseBadge: "Portal de Concierge",
     welcome: "Bienvenida",
     portfolioDescription:
-      "Tus documentos, resumenes y actualizaciones en vivo ya estan listos. Closing Day siempre muestra cuando la IA esta activa y te deja pausar la ayuda cuando quieras.",
+      "Tus documentos, resumenes y actualizaciones en vivo ya estan listos. Concierge siempre muestra cuando la IA esta activa y te deja pausar la ayuda cuando quieras.",
     accessModeLabel: "Modo de acceso",
     accessMagicLink: "Enlace magico",
     accessPassword: "Correo y contrasena",
@@ -116,7 +116,7 @@ const clientCopy = {
     closedOnLabel: "Cerro el",
     openDocuments: "Abrir documentos",
     backToStatus: "Volver al estado del sistema",
-    loadingPortfolio: "Cargando tu portal de Closing Day...",
+    loadingPortfolio: "Cargando tu portal de Concierge...",
     saveProgressTitle: "Guarda tu progreso",
     saveProgressBody:
       "Entraste con un enlace magico. Si creas una contrasena una sola vez, podras volver sin pedir otro enlace.",
@@ -133,7 +133,7 @@ const clientCopy = {
     trustBadgeOverride: "Edicion del agente visible",
     trustBadgeWhy: "Explicaciones del por que incluidas",
     trustBody:
-      "Closing Day siempre etiqueta cuando la IA esta activa o en modo alternativo, explica por que ves cada respuesta y mantiene visible la opcion de edicion del agente.",
+      "Concierge siempre etiqueta cuando la IA esta activa o en modo alternativo, explica por que ves cada respuesta y mantiene visible la opcion de edicion del agente.",
     trustPauseOn: "Pausar ayuda de IA",
     trustPauseOff: "Reanudar ayuda de IA",
     trustPausedNotice:
@@ -161,14 +161,14 @@ const clientCopy = {
     questionChatDescription:
       "Pregunta que significa el documento, que sigue despues o que deberia preocuparte. Las preguntas de estrategia o juicio siguen yendo a tu agente.",
     questionChatEmpty:
-      "Haz la primera pregunta sobre esta transaccion o documento. Closing Day respondera con contexto y avisara al agente si la pregunta entra en riesgo, juicio o preocupacion emocional.",
+      "Haz la primera pregunta sobre esta transaccion o documento. Concierge respondera con contexto y avisara al agente si la pregunta entra en riesgo, juicio o preocupacion emocional.",
     questionChatPlaceholder:
       "Pregunta que significa esto, que sigue despues o si algo deberia preocuparte.",
     questionChatFooter:
       "La respuesta usa el documento seleccionado y el contexto de la transaccion. Las decisiones de estrategia siguen con tu agente.",
     questionSending: "Enviando...",
     questionAsk: "Enviar pregunta",
-    questionTyping: "Closing Day esta escribiendo...",
+    questionTyping: "Concierge esta escribiendo...",
     questionRouted: "Enviado al agente",
     questionNextStep: "Siguiente paso",
     questionPaused:
@@ -366,3 +366,4 @@ export function translateQuestionCategory(
 ): string {
   return questionCategoryLabels[category]?.[language] ?? category;
 }
+

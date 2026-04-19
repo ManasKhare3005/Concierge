@@ -1,5 +1,5 @@
 {
-  "name": "@closing-day/shared",
+  "name": "@concierge/shared",
   "version": "0.1.0",
   "private": true,
   "main": "dist/types/index.js",
@@ -12,3 +12,4 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   }
 }
+

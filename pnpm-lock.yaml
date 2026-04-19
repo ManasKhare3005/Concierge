@@ -17,7 +17,7 @@ importers:
 
   backend:
     dependencies:
-      '@closing-day/shared':
+      '@concierge/shared':
         specifier: workspace:*
         version: link:../shared
       '@prisma/client':
@@ -90,7 +90,7 @@ importers:
 
   frontend:
     dependencies:
-      '@closing-day/shared':
+      '@concierge/shared':
         specifier: workspace:*
         version: link:../shared
       '@hookform/resolvers':
@@ -4741,3 +4741,4 @@ snapshots:
     optionalDependencies:
       '@types/react': 18.3.28
       react: 18.3.1
+

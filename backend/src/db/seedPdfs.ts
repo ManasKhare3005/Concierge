@@ -344,7 +344,7 @@ async function writePdf(definition: SeedPdfDefinition, targetPath: string): Prom
       .font("Helvetica-Oblique")
       .fontSize(9)
       .fillColor("#64748b")
-      .text(`Seed asset generated for Closing Day demo - ${index + 1} / ${definition.pages.length}`, {
+      .text(`Seed asset generated for Concierge demo - ${index + 1} / ${definition.pages.length}`, {
         align: "right"
       });
   });
@@ -382,3 +382,4 @@ export async function ensureSeedPdfs(): Promise<Record<SeedPdfAssetKey, SeedPdfA
 
   return assets;
 }
+
