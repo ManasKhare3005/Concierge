@@ -515,6 +515,7 @@ router.get("/transactions/:id/documents", requireClientAuth, async (request, res
       propertyState: transaction.propertyState,
       propertyZip: transaction.propertyZip,
       propertyPrice: transaction.propertyPrice ?? undefined,
+      expectedCloseAt: transaction.expectedCloseAt?.toISOString(),
       stage: transaction.stage,
       stageLabel: transaction.stageLabel,
       role: transaction.role,

@@ -108,13 +108,18 @@ export function QuestionChat({ transactionId, token, document, questions, langua
     <>
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <MessageSquareText className="h-5 w-5 text-primary" />
-            {copy.questionChatTitle}
-          </CardTitle>
-          <CardDescription>
-            {selectedDocumentLabel}
-          </CardDescription>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-2">
+              <CardTitle className="flex items-center gap-2 text-2xl">
+                <MessageSquareText className="h-5 w-5 text-primary" />
+                {copy.questionChatTitle}
+              </CardTitle>
+              <CardDescription>{selectedDocumentLabel}</CardDescription>
+            </div>
+            <Badge className="border-slate-200 bg-slate-100 text-slate-700">
+              {questions.length} {language === "es" ? "mensajes" : "messages"}
+            </Badge>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           {aiPaused ? (
@@ -122,7 +127,7 @@ export function QuestionChat({ transactionId, token, document, questions, langua
               {copy.questionPaused}
             </div>
           ) : null}
-          <div className="max-h-[38rem] space-y-4 overflow-y-auto pr-1">
+          <div className="max-h-[42rem] space-y-4 overflow-y-auto pr-1">
             {questions.length === 0 ? (
               <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-5 text-sm leading-6 text-slate-600">
                 {copy.questionChatEmpty}
@@ -130,20 +135,31 @@ export function QuestionChat({ transactionId, token, document, questions, langua
             ) : null}
 
             {questions.map((question) => (
-              <div key={question.id} className="rounded-[24px] border border-slate-200 bg-white p-5">
-                <div className="flex flex-wrap items-center gap-2">
-                  <Badge className={getSeverityTone(question.severity)}>{copy.severity} {question.severity}</Badge>
-                  {question.routedToAgent ? (
-                    <Badge className="border-rose-200 bg-rose-50 text-rose-700">{copy.questionRouted}</Badge>
-                  ) : null}
-                  <Badge className="border-slate-200 bg-slate-50 text-slate-700">{translateQuestionCategory(language, question.category)}</Badge>
+              <div key={question.id} className="space-y-3 rounded-[28px] border border-slate-200 bg-white p-5 shadow-[0_14px_34px_rgba(15,23,42,0.04)]">
+                <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge className={getSeverityTone(question.severity)}>
+                      {copy.severity} {question.severity}
+                    </Badge>
+                    {question.routedToAgent ? (
+                      <Badge className="border-rose-200 bg-rose-50 text-rose-700">{copy.questionRouted}</Badge>
+                    ) : null}
+                    <Badge className="border-slate-200 bg-white text-slate-700">
+                      {translateQuestionCategory(language, question.category)}
+                    </Badge>
+                  </div>
+                  <p className="mt-3 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                    {language === "es" ? "Tu pregunta" : "Your question"}
+                  </p>
+                  <p className="mt-2 text-sm font-medium leading-6 text-slate-900">{question.question}</p>
                 </div>
 
-                <p className="mt-3 text-sm font-medium leading-6 text-slate-900">{question.question}</p>
-
-                <div className="mt-4 rounded-[22px] bg-slate-50 p-4">
+                <div className="rounded-[22px] border border-teal-100 bg-teal-50/70 p-4">
                   <div className="flex flex-wrap items-center gap-2">
                     <AiBadge generatedBy={question.generatedBy} />
+                    <Badge className="border-teal-200 bg-white text-teal-800">
+                      {language === "es" ? "Respuesta contextual" : "Contextual answer"}
+                    </Badge>
                   </div>
                   <p className="mt-3 text-sm leading-6 text-slate-700">{question.answer}</p>
                   {question.nextStep ? (
@@ -168,10 +184,11 @@ export function QuestionChat({ transactionId, token, document, questions, langua
             ) : null}
           </div>
 
-          <form className="space-y-3" onSubmit={form.handleSubmit(submitQuestion)}>
+          <form className="space-y-3 rounded-[24px] border border-slate-200 bg-slate-50 p-4" onSubmit={form.handleSubmit(submitQuestion)}>
             <Textarea
               placeholder={copy.questionChatPlaceholder}
               disabled={aiPaused}
+              className="min-h-28 bg-white"
               {...form.register("question")}
             />
             {form.formState.errors.question ? (

@@ -17,6 +17,7 @@ export interface ClientTransactionDocumentsResponse {
     propertyState: string;
     propertyZip: string;
     propertyPrice?: number;
+    expectedCloseAt?: string;
     stage: string;
     stageLabel: string;
     role: string;

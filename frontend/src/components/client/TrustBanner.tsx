@@ -14,7 +14,7 @@ export function TrustBanner({ language, isPaused, onTogglePause }: TrustBannerPr
   const copy = getClientCopy(language);
 
   return (
-    <div className="rounded-[28px] border border-slate-200 bg-white/90 p-5 shadow-glass backdrop-blur">
+    <div className="rounded-[28px] border border-slate-200 bg-[radial-gradient(circle_at_top_left,_rgba(20,184,166,0.10),_transparent_28%),linear-gradient(180deg,_rgba(255,255,255,0.96)_0%,_rgba(248,250,252,0.94)_100%)] p-5 shadow-glass backdrop-blur">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-2">

@@ -185,11 +185,16 @@ export function VoiceConcierge({ transactionId, token, language, session }: Voic
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <PhoneCall className="h-5 w-5 text-primary" />
-            {localCopy.emptyTitle}
-          </CardTitle>
-          <CardDescription>{localCopy.emptyBody}</CardDescription>
+          <div className="space-y-3">
+            <Badge className="w-fit border-slate-200 bg-slate-100 text-slate-700">
+              {language === "es" ? "En espera" : "Standing by"}
+            </Badge>
+            <CardTitle className="flex items-center gap-2 text-2xl">
+              <PhoneCall className="h-5 w-5 text-primary" />
+              {localCopy.emptyTitle}
+            </CardTitle>
+            <CardDescription>{localCopy.emptyBody}</CardDescription>
+          </div>
         </CardHeader>
       </Card>
     );
@@ -199,15 +204,29 @@ export function VoiceConcierge({ transactionId, token, language, session }: Voic
     <>
       <Card>
         <CardHeader>
-          <div className="flex flex-wrap items-center gap-2">
-            <Badge className="border-teal-200 bg-teal-50 text-teal-800">{statusLabel(session, language)}</Badge>
-            <AiBadge generatedBy={session.generatedBy} />
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <div className="space-y-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="border-teal-200 bg-teal-50 text-teal-800">{statusLabel(session, language)}</Badge>
+                <AiBadge generatedBy={session.generatedBy} />
+              </div>
+              <div className="space-y-2">
+                <CardTitle className="flex items-center gap-2 text-2xl">
+                  <Bot className="h-5 w-5 text-primary" />
+                  {localCopy.title}
+                </CardTitle>
+                <CardDescription>
+                  {showBookedState ? localCopy.bookedBody : showClosedState ? localCopy.closedBody : localCopy.openBody}
+                </CardDescription>
+              </div>
+            </div>
+            <div className="rounded-[24px] border border-slate-200 bg-slate-50 px-4 py-3 text-right">
+              <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                {language === "es" ? "Temas activos" : "Active concerns"}
+              </p>
+              <p className="mt-2 text-2xl font-semibold text-slate-950">{session.topConcerns.length}</p>
+            </div>
           </div>
-          <CardTitle className="flex items-center gap-2 text-2xl">
-            <Bot className="h-5 w-5 text-primary" />
-            {localCopy.title}
-          </CardTitle>
-          <CardDescription>{showBookedState ? localCopy.bookedBody : showClosedState ? localCopy.closedBody : localCopy.openBody}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-5">
           <div className="flex flex-wrap gap-2">
@@ -219,7 +238,7 @@ export function VoiceConcierge({ transactionId, token, language, session }: Voic
           </div>
 
           {session.currentBotTurn ? (
-            <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
+            <div className="rounded-[24px] border border-teal-100 bg-teal-50/70 p-5">
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">{localCopy.currentTurn}</p>
               <p className="mt-3 text-sm leading-7 text-slate-700">{session.currentBotTurn.text}</p>
             </div>
@@ -292,7 +311,7 @@ export function VoiceConcierge({ transactionId, token, language, session }: Voic
                     key={option}
                     type="button"
                     variant="outline"
-                    className="h-auto justify-start px-4 py-4 text-left leading-6"
+                    className="h-auto justify-start rounded-[20px] px-4 py-4 text-left leading-6"
                     onClick={() => void handleResponse(option)}
                   >
                     {option}
