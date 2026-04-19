@@ -5,6 +5,8 @@ declare global {
     interface Request {
       agent?: AgentSessionPayload;
       clientSession?: ClientSessionPayload;
+      clientAccessToken?: string;
+      magicLinkPortalId?: string;
     }
   }
 }

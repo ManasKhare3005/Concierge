@@ -54,27 +54,39 @@ export function signMagicLink(payload: MagicLinkPayload): string {
 }
 
 export function verifyAgentSession(token: string): AgentSessionPayload | null {
-  const decoded = jwt.verify(token, sessionSecret);
-  if (isAgentSessionPayload(decoded)) {
-    return decoded;
+  try {
+    const decoded = jwt.verify(token, sessionSecret);
+    if (isAgentSessionPayload(decoded)) {
+      return decoded;
+    }
+  } catch {
+    return null;
   }
 
   return null;
 }
 
 export function verifyClientSession(token: string): ClientSessionPayload | null {
-  const decoded = jwt.verify(token, sessionSecret);
-  if (isClientSessionPayload(decoded)) {
-    return decoded;
+  try {
+    const decoded = jwt.verify(token, sessionSecret);
+    if (isClientSessionPayload(decoded)) {
+      return decoded;
+    }
+  } catch {
+    return null;
   }
 
   return null;
 }
 
 export function verifyMagicLink(token: string): MagicLinkPayload | null {
-  const decoded = jwt.verify(token, magicLinkSecret);
-  if (isMagicLinkPayload(decoded)) {
-    return decoded;
+  try {
+    const decoded = jwt.verify(token, magicLinkSecret);
+    if (isMagicLinkPayload(decoded)) {
+      return decoded;
+    }
+  } catch {
+    return null;
   }
 
   return null;

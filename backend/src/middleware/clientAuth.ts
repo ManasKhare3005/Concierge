@@ -1,6 +1,7 @@
 import type { NextFunction, Request, Response } from "express";
 
-import { verifyClientSession, verifyMagicLink } from "../lib/jwt";
+import { verifyClientSession } from "../lib/jwt";
+import { validateMagicLinkPortalToken } from "../services/magicLink";
 
 function readBearerToken(request: Request): string | null {
   const authorizationHeader = request.header("authorization");
@@ -12,7 +13,11 @@ function readBearerToken(request: Request): string | null {
   return typeof tokenFromQuery === "string" ? tokenFromQuery : null;
 }
 
-export function requireClientAuth(request: Request, response: Response, next: NextFunction): void {
+export async function requireClientAuth(
+  request: Request,
+  response: Response,
+  next: NextFunction
+): Promise<void> {
   const token = readBearerToken(request);
 
   if (!token) {
@@ -24,22 +29,20 @@ export function requireClientAuth(request: Request, response: Response, next: Ne
     const clientSession = verifyClientSession(token);
     if (clientSession) {
       request.clientSession = clientSession;
+      request.clientAccessToken = token;
       next();
       return;
     }
 
-    const magicLink = verifyMagicLink(token);
-    if (!magicLink) {
+    const magicLinkAccess = await validateMagicLinkPortalToken(token);
+    if (!magicLinkAccess) {
       response.status(401).json({ message: "Invalid client session." });
       return;
     }
 
-    request.clientSession = {
-      type: "client",
-      clientAccountId: magicLink.clientAccountId,
-      accessibleTransactionIds: [magicLink.transactionId],
-      via: "magic_link"
-    };
+    request.clientSession = magicLinkAccess.session;
+    request.clientAccessToken = token;
+    request.magicLinkPortalId = magicLinkAccess.portalId;
     next();
   } catch {
     response.status(401).json({ message: "Invalid client session." });

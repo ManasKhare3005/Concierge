@@ -20,13 +20,13 @@ export function LandingPage() {
       <section className="grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
         <Card className="overflow-hidden">
           <CardHeader className="space-y-4">
-            <Badge className="w-fit border-teal-200 bg-teal-50 text-teal-800">Phase 1 scaffold live</Badge>
+            <Badge className="w-fit border-teal-200 bg-teal-50 text-teal-800">Phase 2 auth + seed live</Badge>
             <CardTitle className="max-w-3xl text-4xl leading-tight md:text-5xl">
               Closing Day gives agents live AI context before confusion becomes a lost deal.
             </CardTitle>
             <CardDescription className="max-w-2xl text-base text-slate-600">
-              This fresh TypeScript rebuild now has the monorepo scaffold, Prisma data model, AI service wrappers,
-              and a live frontend-to-backend diagnostics loop in place.
+              This fresh TypeScript rebuild now has real agent and client auth, seeded demo transactions, generated PDF
+              assets, and a live frontend-to-backend diagnostics loop in place.
             </CardDescription>
           </CardHeader>
           <CardContent className="flex flex-wrap gap-3">
@@ -49,7 +49,7 @@ export function LandingPage() {
               Backend handshake
             </CardTitle>
             <CardDescription>
-              The frontend calls `GET /api/diagnostics/health` so Phase 1 finishes with a real integration check.
+              The frontend calls `GET /api/diagnostics/health` so the app always shows the current backend service state.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -93,8 +93,8 @@ export function LandingPage() {
           },
           {
             icon: Building2,
-            title: "Schema modeled",
-            body: "The full Prisma schema is in place so later phases can plug into seeded transactions without rebuilding the data layer."
+            title: "Demo data seeded",
+            body: "James, Sarah, Marcus, Maria, David, and the repeat clients now live in SQLite with documents, questions, sentiment, and readiness."
           },
           {
             icon: RadioTower,
