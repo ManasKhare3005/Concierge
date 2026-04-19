@@ -1,14 +1,14 @@
-import Anthropic from "@anthropic-ai/sdk";
+import Groq from "groq-sdk";
 import type { AiTransparency, GeneratedBy, ServiceStatus } from "@shared";
 
 import "../bootstrap/loadEnv";
 import { logger } from "./logger";
 
-const anthropicClient = process.env.ANTHROPIC_API_KEY
-  ? new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
+const groqClient = process.env.GROQ_API_KEY
+  ? new Groq({ apiKey: process.env.GROQ_API_KEY })
   : null;
 
-export interface AnthropicTaskOptions<TOutput extends object> {
+export interface GroqTaskOptions<TOutput extends object> {
   taskName: string;
   system: string;
   prompt: string;
@@ -19,7 +19,7 @@ export interface AnthropicTaskOptions<TOutput extends object> {
   temperature?: number;
 }
 
-export type AnthropicTaskResult<TOutput extends object> = TOutput & {
+export type GroqTaskResult<TOutput extends object> = TOutput & {
   generatedBy: GeneratedBy;
   transparency: AiTransparency;
 };
@@ -31,23 +31,19 @@ function buildTransparency(
 ): AiTransparency {
   return {
     sources,
-    note: `${generatedBy === "anthropic" ? "Anthropic response" : "Fallback response"}: ${note}`
+    note: `${generatedBy === "groq" ? "Groq response" : "Fallback response"}: ${note}`
   };
 }
 
-function getResponseText(response: Awaited<ReturnType<Anthropic["messages"]["create"]>>): string {
-  if (!("content" in response)) {
-    throw new Error("Expected a non-streaming Anthropic response.");
+function getResponseText(
+  response: Awaited<ReturnType<Groq["chat"]["completions"]["create"]>>
+): string {
+  if (!("choices" in response)) {
+    throw new Error("Expected a non-streaming Groq response.");
   }
 
-  return response.content
-    .map((block) => {
-      if (block.type === "text") {
-        return block.text;
-      }
-
-      return "";
-    })
+  return response.choices
+    .map((choice) => choice.message.content ?? "")
     .join("\n")
     .trim();
 }
@@ -64,46 +60,48 @@ function serializeError(error: unknown): Record<string, unknown> {
   return { error };
 }
 
-export function getAnthropicStatus(): ServiceStatus {
-  if (!process.env.ANTHROPIC_API_KEY) {
+export function getGroqStatus(): ServiceStatus {
+  if (!process.env.GROQ_API_KEY) {
     return {
-      name: "anthropic",
+      name: "groq",
       state: "fallback",
-      detail: "ANTHROPIC_API_KEY is not set. Heuristic fallbacks will be used."
+      detail: "GROQ_API_KEY is not set. Heuristic fallbacks will be used."
     };
   }
 
   return {
-    name: "anthropic",
+    name: "groq",
     state: "configured",
-    detail: `Configured for model ${process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-5"}.`
+    detail: `Configured for model ${process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile"}.`
   };
 }
 
-export async function runAnthropicTask<TOutput extends object>(
-  options: AnthropicTaskOptions<TOutput>
-): Promise<AnthropicTaskResult<TOutput>> {
+export async function runGroqTask<TOutput extends object>(
+  options: GroqTaskOptions<TOutput>
+): Promise<GroqTaskResult<TOutput>> {
   const fallbackResult = await options.fallback();
 
-  if (!anthropicClient) {
+  if (!groqClient) {
     return {
       ...fallbackResult,
       generatedBy: "fallback",
       transparency: buildTransparency(
         "fallback",
         options.sources,
-        "Anthropic is not configured, so heuristic logic handled this request."
+        "Groq is not configured, so heuristic logic handled this request."
       )
     };
   }
 
   try {
-    const response = await anthropicClient.messages.create({
-      model: process.env.ANTHROPIC_MODEL ?? "claude-sonnet-4-5",
-      max_tokens: options.maxTokens ?? 1200,
+    const response = await groqClient.chat.completions.create({
+      model: process.env.GROQ_MODEL ?? "llama-3.3-70b-versatile",
+      max_completion_tokens: options.maxTokens ?? 1200,
       temperature: options.temperature ?? 0.2,
-      system: options.system,
-      messages: [{ role: "user", content: options.prompt }]
+      messages: [
+        { role: "system", content: options.system },
+        { role: "user", content: options.prompt }
+      ]
     });
 
     const responseText = getResponseText(response);
@@ -111,15 +109,15 @@ export async function runAnthropicTask<TOutput extends object>(
 
     return {
       ...parsed,
-      generatedBy: "anthropic",
+      generatedBy: "groq",
       transparency: buildTransparency(
-        "anthropic",
+        "groq",
         options.sources,
         `${options.taskName} used live transaction context and model output.`
       )
     };
   } catch (error) {
-    logger.error("Anthropic request failed", {
+    logger.error("Groq request failed", {
       taskName: options.taskName,
       ...serializeError(error)
     });
@@ -130,7 +128,7 @@ export async function runAnthropicTask<TOutput extends object>(
       transparency: buildTransparency(
         "fallback",
         options.sources,
-        `${options.taskName} fell back after an Anthropic error.`
+        `${options.taskName} fell back after a Groq error.`
       )
     };
   }

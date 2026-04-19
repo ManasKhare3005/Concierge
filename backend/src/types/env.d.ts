@@ -5,8 +5,8 @@ declare namespace NodeJS {
     CLIENT_ORIGIN?: string;
     MAGIC_LINK_SECRET?: string;
     SESSION_SECRET?: string;
-    ANTHROPIC_API_KEY?: string;
-    ANTHROPIC_MODEL?: string;
+    GROQ_API_KEY?: string;
+    GROQ_MODEL?: string;
     ELEVENLABS_API_KEY?: string;
     ELEVENLABS_VOICE_ID?: string;
     ELEVENLABS_MODEL_ID?: string;

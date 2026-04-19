@@ -8,8 +8,8 @@ interface AiBadgeProps {
 
 export function AiBadge({ generatedBy }: AiBadgeProps) {
   return (
-    <Badge className={generatedBy === "anthropic" ? "border-emerald-200 text-emerald-700" : "border-amber-200 text-amber-700"}>
-      {generatedBy === "anthropic" ? "AI live" : "Fallback"}
+    <Badge className={generatedBy === "groq" ? "border-emerald-200 text-emerald-700" : "border-amber-200 text-amber-700"}>
+      {generatedBy === "groq" ? "AI live" : "Fallback"}
     </Badge>
   );
 }

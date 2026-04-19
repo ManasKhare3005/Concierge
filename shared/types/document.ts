@@ -5,7 +5,7 @@ export type DocumentCategory =
   | "hoa"
   | "generic";
 
-export type GeneratedBy = "anthropic" | "fallback";
+export type GeneratedBy = "groq" | "fallback";
 
 export interface AiTransparency {
   sources: string[];

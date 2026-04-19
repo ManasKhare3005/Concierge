@@ -1,8 +1,8 @@
 import type { ServiceStatus } from "@shared";
 
 import { loadEnv } from "./loadEnv";
-import { getAnthropicStatus } from "../lib/anthropic";
 import { getElevenLabsStatus } from "../lib/elevenlabs";
+import { getGroqStatus } from "../lib/groq";
 import { logger } from "../lib/logger";
 import { getLoftyStatus } from "../lib/loftyClient";
 
@@ -22,7 +22,7 @@ export function getStartupDiagnostics(): StartupDiagnostics {
     port: Number(process.env.PORT ?? 4000),
     clientOrigin: process.env.CLIENT_ORIGIN ?? "http://localhost:5173",
     databaseUrl: process.env.DATABASE_URL ?? "file:./dev.db",
-    services: [getAnthropicStatus(), getElevenLabsStatus(), getLoftyStatus()]
+    services: [getGroqStatus(), getElevenLabsStatus(), getLoftyStatus()]
   };
 }
 

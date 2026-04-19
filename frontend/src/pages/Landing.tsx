@@ -89,7 +89,7 @@ export function LandingPage() {
           {
             icon: Sparkles,
             title: "AI wrappers ready",
-            body: "Anthropic and ElevenLabs helpers already follow the live-or-fallback pattern with transparency metadata."
+            body: "Groq and ElevenLabs helpers already follow the live-or-fallback pattern with transparency metadata."
           },
           {
             icon: Building2,

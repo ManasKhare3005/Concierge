@@ -1,7 +1,7 @@
 export type ServiceState = "configured" | "live" | "fallback" | "demo" | "error";
 
 export interface ServiceStatus {
-  name: "anthropic" | "elevenlabs" | "lofty";
+  name: "groq" | "elevenlabs" | "lofty";
   state: ServiceState;
   detail: string;
 }
