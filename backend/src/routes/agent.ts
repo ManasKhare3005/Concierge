@@ -4,6 +4,7 @@ import { prisma } from "../lib/prisma";
 import { requireAgentAuth } from "../middleware/agentAuth";
 import { mapDocumentRecord } from "../services/documents/repository";
 import { buildAgentTriage } from "../services/triage/dashboard";
+import { buildRepeatClients } from "../services/triage/repeatClients";
 
 const router = Router();
 
@@ -69,6 +70,17 @@ router.get("/transactions", requireAgentAuth, async (request, response) => {
       }))
     }))
   });
+});
+
+router.get("/repeat-clients", requireAgentAuth, async (request, response) => {
+  const agentId = request.agent?.agentId;
+  if (!agentId) {
+    response.status(401).json({ message: "Missing agent session." });
+    return;
+  }
+
+  const repeatClients = await buildRepeatClients(agentId);
+  response.json(repeatClients);
 });
 
 router.get("/transactions/:id/documents", requireAgentAuth, async (request, response) => {

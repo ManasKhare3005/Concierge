@@ -58,6 +58,7 @@ function dedupeActivity(items: AgentActivityItem[]): AgentActivityItem[] {
 export function AgentTriagePage() {
   const navigate = useNavigate();
   const token = useAgentAuthStore((state) => state.token);
+  const nudgesPaused = useAgentAuthStore((state) => state.nudgesPaused);
   const logout = useAgentAuthStore((state) => state.logout);
   const triageQuery = useTriage(token);
   const agentEvents = useAgentEventStream(token);
@@ -122,7 +123,7 @@ export function AgentTriagePage() {
     }, 1_500);
 
     const clientCard = allCards.find((card) => card.clientAccountId === clientAccountId);
-    if (nextEvent.type === "client:question") {
+    if (!nudgesPaused && nextEvent.type === "client:question") {
       const payload = nextEvent.payload as RealtimeEventPayloadMap["client:question"];
       const severity = Number(payload.classification.split(":")[1] ?? "2");
       if (severity >= 4 || payload.newReadiness?.bucket === "needs_full_attention") {
@@ -136,6 +137,7 @@ export function AgentTriagePage() {
     }
 
     if (
+      !nudgesPaused &&
       nextEvent.type === "client:sentiment" &&
       (() => {
         const payload = nextEvent.payload as RealtimeEventPayloadMap["client:sentiment"];
@@ -154,7 +156,7 @@ export function AgentTriagePage() {
       });
     }
 
-    if (nextEvent.type === "bot:booked") {
+    if (!nudgesPaused && nextEvent.type === "bot:booked") {
       const payload = nextEvent.payload as RealtimeEventPayloadMap["bot:booked"];
       setToastState({
         open: true,
@@ -167,7 +169,7 @@ export function AgentTriagePage() {
     return () => {
       window.clearTimeout(timeout);
     };
-  }, [agentEvents.latestEvent, allCards]);
+  }, [agentEvents.latestEvent, allCards, nudgesPaused]);
 
   if (!token) {
     return <Navigate to="/agent/login" replace />;
@@ -264,6 +266,11 @@ export function AgentTriagePage() {
                   <CardDescription className="max-w-3xl text-base text-teal-50/90">
                     Live client questions and emotional signals now move the board as they happen, so you can protect deals without spending your day digging through every file.
                   </CardDescription>
+                  {nudgesPaused ? (
+                    <p className="text-sm text-teal-50/90">
+                      Realtime nudges are paused in Settings. The board still updates, but high-priority toasts stay quiet until you resume them.
+                    </p>
+                  ) : null}
                 </div>
                 <Button
                   variant="outline"

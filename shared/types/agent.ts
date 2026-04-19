@@ -97,3 +97,41 @@ export interface AgentTriageResponse {
     booked: number;
   };
 }
+
+export type AgentRepeatClientTier = "immediate" | "soon" | "nurture";
+
+export interface AgentRepeatClientCard {
+  clientAccountId: string;
+  transactionId: string;
+  clientName: string;
+  propertyAddress: string;
+  propertyCity: string;
+  propertyState: string;
+  propertyZip: string;
+  closedAt: string;
+  monthsSinceClose: number;
+  equityGainPct: number;
+  estimatedCurrentValue: number;
+  originalPrice?: number;
+  tier: AgentRepeatClientTier;
+  lifeEventSignals: string[];
+  outcomeLabel: string;
+  recommendedAction: string;
+  roleLabel: string;
+  roiPotentialDollars: number;
+}
+
+export interface AgentRepeatClientsResponse {
+  grouped: Record<AgentRepeatClientTier, AgentRepeatClientCard[]>;
+  roi: {
+    estimatedPipelineValue: number;
+    annualFollowUpHoursSaved: number;
+    immediateOpportunityCount: number;
+  };
+  summary: {
+    totalClients: number;
+    immediate: number;
+    soon: number;
+    nurture: number;
+  };
+}

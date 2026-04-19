@@ -7,13 +7,19 @@ import { WhyExpansion } from "@/components/shared/WhyExpansion";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { api } from "@/lib/api";
+import type { SupportedLanguage } from "@/lib/i18n";
+import { getClientCopy } from "@/lib/i18n";
 
 interface DocumentViewerProps {
   document: DocumentRecordDetail | null;
   token: string;
+  language: SupportedLanguage;
+  aiPaused: boolean;
 }
 
-export function DocumentViewer({ document, token }: DocumentViewerProps) {
+export function DocumentViewer({ document, token, language, aiPaused }: DocumentViewerProps) {
+  const copy = getClientCopy(language);
+  const whyLabel = language === "es" ? "Por que veo esto?" : "Why am I seeing this?";
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
   const [isLoadingPdf, setIsLoadingPdf] = useState(false);
   const [pdfError, setPdfError] = useState<string | null>(null);
@@ -78,7 +84,7 @@ export function DocumentViewer({ document, token }: DocumentViewerProps) {
     return (
       <Card>
         <CardContent className="p-10 text-center text-sm text-slate-500">
-          Select a document to see the PDF preview and AI summary.
+          {copy.noDocumentSelected}
         </CardContent>
       </Card>
     );
@@ -100,7 +106,7 @@ export function DocumentViewer({ document, token }: DocumentViewerProps) {
             {isLoadingPdf ? (
               <div className="flex min-h-[600px] items-center justify-center gap-3 text-sm text-slate-500">
                 <LoaderCircle className="h-4 w-4 animate-spin" />
-                Loading PDF preview...
+                {copy.loadingPdf}
               </div>
             ) : pdfError ? (
               <div className="flex min-h-[600px] items-center justify-center px-6 text-center text-sm text-rose-700">
@@ -110,7 +116,7 @@ export function DocumentViewer({ document, token }: DocumentViewerProps) {
               <iframe className="min-h-[600px] w-full" src={pdfUrl} title={document.title} />
             ) : (
               <div className="flex min-h-[600px] items-center justify-center text-sm text-slate-500">
-                PDF preview unavailable.
+                {copy.pdfUnavailable}
               </div>
             )}
           </div>
@@ -121,23 +127,28 @@ export function DocumentViewer({ document, token }: DocumentViewerProps) {
         <CardHeader className="space-y-4">
           <div className="flex flex-wrap items-center gap-3">
             {document.summaryGeneratedBy ? <AiBadge generatedBy={document.summaryGeneratedBy} /> : null}
-            {document.overriddenAt ? <span className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600">Agent edited</span> : null}
+            {document.overriddenAt ? <span className="rounded-full border border-slate-200 px-3 py-1 text-xs font-medium text-slate-600">{copy.agentEdited}</span> : null}
           </div>
           {document.summaryTlDr ? <p className="text-sm leading-6 text-slate-700">{document.summaryTlDr}</p> : null}
-          {document.transparency ? <WhyExpansion transparency={document.transparency} /> : null}
+          {document.transparency ? <WhyExpansion transparency={document.transparency} label={whyLabel} /> : null}
         </CardHeader>
         <CardContent className="space-y-5">
+          {aiPaused ? (
+            <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-5 text-sm leading-7 text-amber-900">
+              {copy.aiPausedSummary}
+            </div>
+          ) : null}
           {summary ? (
             <>
               <section className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">What This Is</h3>
-                <p className="mt-3 text-sm leading-6 text-slate-700">{summary.whatThisIs}</p>
+                <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">{copy.whatThisIs}</h3>
+                <p className="mt-3 text-sm leading-6 text-slate-700">{aiPaused ? copy.aiPausedSummary : summary.whatThisIs}</p>
               </section>
 
               <section className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Watch For</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">{copy.watchFor}</h3>
                 <div className="mt-3 space-y-3">
-                  {summary.watchFor.map((item) => (
+                  {(aiPaused ? [copy.aiPausedSummary] : summary.watchFor).map((item) => (
                     <p key={item} className="text-sm leading-6 text-slate-700">
                       {item}
                     </p>
@@ -146,9 +157,9 @@ export function DocumentViewer({ document, token }: DocumentViewerProps) {
               </section>
 
               <section className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
-                <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">Ask Your Agent</h3>
+                <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">{copy.askYourAgent}</h3>
                 <div className="mt-3 space-y-3">
-                  {summary.askYourAgent.map((item) => (
+                  {(aiPaused ? [copy.aiPausedSummary] : summary.askYourAgent).map((item) => (
                     <p key={item} className="text-sm leading-6 text-slate-700">
                       {item}
                     </p>
@@ -159,18 +170,18 @@ export function DocumentViewer({ document, token }: DocumentViewerProps) {
               <section className="rounded-[24px] border border-slate-200 bg-white p-5">
                 <div className="flex items-center justify-between gap-3">
                   <h3 className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-500">
-                    Plain-English Translation
+                    {copy.plainEnglishTranslation}
                   </h3>
                   <Button onClick={() => setShowPlainEnglish((current) => !current)} type="button" variant="outline">
-                    {showPlainEnglish ? "Hide" : "Show"}
+                    {showPlainEnglish ? copy.hide : copy.show}
                   </Button>
                 </div>
-                {showPlainEnglish ? <p className="mt-4 text-sm leading-6 text-slate-700">{summary.plainEnglishFullText}</p> : null}
+                {showPlainEnglish ? <p className="mt-4 text-sm leading-6 text-slate-700">{aiPaused ? copy.aiPausedSummary : summary.plainEnglishFullText}</p> : null}
               </section>
             </>
           ) : (
             <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5 text-sm text-slate-600">
-              The document uploaded successfully, but a summary is not available yet.
+              {copy.summaryUnavailable}
             </div>
           )}
         </CardContent>

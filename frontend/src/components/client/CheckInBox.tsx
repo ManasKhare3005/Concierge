@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useCheckIn } from "@/hooks/useCheckIn";
+import type { SupportedLanguage } from "@/lib/i18n";
+import { getClientCopy, translateReadinessBucket } from "@/lib/i18n";
 
 const checkInSchema = z.object({
   response: z.string().trim().min(3, "Say a little more so Closing Day can read the tone accurately.").max(600)
@@ -23,11 +25,15 @@ type CheckInValues = z.infer<typeof checkInSchema>;
 interface CheckInBoxProps {
   transactionId: string;
   token: string;
+  language: SupportedLanguage;
+  aiPaused: boolean;
   latestSentiment?: SentimentSnapshot;
   readiness?: ReadinessSnapshotRecord;
 }
 
-export function CheckInBox({ transactionId, token, latestSentiment, readiness }: CheckInBoxProps) {
+export function CheckInBox({ transactionId, token, language, aiPaused, latestSentiment, readiness }: CheckInBoxProps) {
+  const copy = getClientCopy(language);
+  const whyLabel = language === "es" ? "Por que veo esto?" : "Why am I seeing this?";
   const checkIn = useCheckIn(transactionId, token);
   const [lastPayload, setLastPayload] = useState<CheckInValues | null>(null);
   const [toastState, setToastState] = useState<{
@@ -57,14 +63,14 @@ export function CheckInBox({ transactionId, token, latestSentiment, readiness }:
       form.reset();
       setToastState({
         open: true,
-        title: "Check-in saved",
-        description: "Your latest sentiment signal has been recorded and the agent view is updating.",
+        title: copy.checkInSavedTitle,
+        description: copy.checkInSavedBody,
         variant: "success"
       });
     } catch (error) {
       setToastState({
         open: true,
-        title: "Check-in failed",
+        title: copy.checkInFailedTitle,
         description: error instanceof Error ? error.message : "The sentiment check-in request failed.",
         variant: "error"
       });
@@ -85,13 +91,18 @@ export function CheckInBox({ transactionId, token, latestSentiment, readiness }:
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-2xl">
             <HeartHandshake className="h-5 w-5 text-primary" />
-            Quick Check-In
+            {copy.checkInTitle}
           </CardTitle>
           <CardDescription>
-            Share how this transaction feels right now. Emotional signals help decide whether your agent can stay hands-off or should step in.
+            {copy.checkInDescription}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {aiPaused ? (
+            <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-5 text-sm leading-7 text-amber-900">
+              {copy.checkInPaused}
+            </div>
+          ) : null}
           {latestSentiment ? (
             <div className="rounded-[24px] border border-slate-200 bg-slate-50 p-5">
               <div className="flex flex-wrap items-center gap-2">
@@ -104,36 +115,37 @@ export function CheckInBox({ transactionId, token, latestSentiment, readiness }:
               <p className="mt-3 text-sm leading-6 text-slate-700">{latestSentiment.alertReason}</p>
               {readiness ? (
                 <p className="mt-3 text-sm font-medium text-slate-900">
-                  Current readiness: {readiness.bucket.replaceAll("_", " ")}
+                  {copy.currentReadiness}: {translateReadinessBucket(language, readiness.bucket)}
                 </p>
               ) : null}
               <div className="mt-4">
-                <WhyExpansion transparency={latestSentiment.transparency} />
+                <WhyExpansion transparency={latestSentiment.transparency} label={whyLabel} />
               </div>
             </div>
           ) : (
             <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-5 text-sm leading-6 text-slate-600">
-              No recent check-in yet. A short note like "I feel good now" or "I am second guessing this house" is enough to update the agent view.
+              {copy.checkInEmpty}
             </div>
           )}
 
           <form className="space-y-3" onSubmit={form.handleSubmit(submitCheckIn)}>
             <Textarea
-              placeholder="Example: I feel okay overall, but I am worried about the repair timeline."
+              placeholder={copy.checkInPlaceholder}
+              disabled={aiPaused}
               {...form.register("response")}
             />
             {form.formState.errors.response ? (
               <p className="text-sm text-rose-600">{form.formState.errors.response.message}</p>
             ) : null}
 
-            <Button disabled={checkIn.isPending} type="submit">
+            <Button disabled={checkIn.isPending || aiPaused} type="submit">
               {checkIn.isPending ? (
                 <>
                   <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
+                  {copy.checkInSaving}
                 </>
               ) : (
-                "Submit Check-In"
+                copy.checkInSubmit
               )}
             </Button>
           </form>
@@ -145,7 +157,7 @@ export function CheckInBox({ transactionId, token, latestSentiment, readiness }:
         title={toastState.title}
         variant={toastState.variant}
         {...(toastState.description ? { description: toastState.description } : {})}
-        {...(toastState.variant === "error" ? { actionLabel: "Retry" } : {})}
+        {...(toastState.variant === "error" ? { actionLabel: copy.retry } : {})}
         {...(toastState.variant === "error"
           ? {
               onAction: () => {

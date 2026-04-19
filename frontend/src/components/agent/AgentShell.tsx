@@ -1,5 +1,5 @@
 import type { PropsWithChildren } from "react";
-import { Building2, Settings2 } from "lucide-react";
+import { Building2, Repeat2, Settings2 } from "lucide-react";
 import { Link, useLocation } from "react-router-dom";
 
 import { cn } from "@/lib/utils";
@@ -28,6 +28,11 @@ export function AgentShell({ children }: PropsWithChildren) {
                 to: "/agent/settings",
                 label: "Settings",
                 icon: Settings2
+              },
+              {
+                to: "/agent/repeat-clients",
+                label: "Repeat Clients",
+                icon: Repeat2
               }
             ].map((item) => (
               <Link

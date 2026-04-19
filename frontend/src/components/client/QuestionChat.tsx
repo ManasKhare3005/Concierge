@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/textarea";
 import { useAskQuestion } from "@/hooks/useAskQuestion";
+import type { SupportedLanguage } from "@/lib/i18n";
+import { getClientCopy, translateQuestionCategory } from "@/lib/i18n";
 
 const askQuestionSchema = z.object({
   question: z.string().trim().min(4, "Ask a little more so Closing Day has enough context.").max(1_200)
@@ -25,6 +27,8 @@ interface QuestionChatProps {
   token: string;
   document: DocumentRecordDetail | null;
   questions: QuestionRecord[];
+  language: SupportedLanguage;
+  aiPaused: boolean;
 }
 
 function getSeverityTone(severity: number): string {
@@ -39,7 +43,9 @@ function getSeverityTone(severity: number): string {
   return "border-slate-200 bg-white text-slate-700";
 }
 
-export function QuestionChat({ transactionId, token, document, questions }: QuestionChatProps) {
+export function QuestionChat({ transactionId, token, document, questions, language, aiPaused }: QuestionChatProps) {
+  const copy = getClientCopy(language);
+  const whyLabel = language === "es" ? "Por que veo esto?" : "Why am I seeing this?";
   const askQuestion = useAskQuestion(transactionId, token);
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
   const [lastPayload, setLastPayload] = useState<AskQuestionValues | null>(null);
@@ -61,11 +67,11 @@ export function QuestionChat({ transactionId, token, document, questions }: Ques
 
   const selectedDocumentLabel = useMemo(() => {
     if (!document) {
-      return "Ask a general transaction question";
+      return copy.questionChatDescription;
     }
 
-    return `Asking about ${document.title}`;
-  }, [document]);
+    return language === "es" ? `Preguntando sobre ${document.title}` : `Asking about ${document.title}`;
+  }, [copy.questionChatDescription, document, language]);
 
   async function submitQuestion(values: AskQuestionValues) {
     setPendingQuestion(values.question);
@@ -82,7 +88,7 @@ export function QuestionChat({ transactionId, token, document, questions }: Ques
       const description = error instanceof Error ? error.message : "The question request failed.";
       setToastState({
         open: true,
-        title: "Question failed to send",
+        title: copy.questionFailed,
         description
       });
     } finally {
@@ -104,28 +110,33 @@ export function QuestionChat({ transactionId, token, document, questions }: Ques
         <CardHeader>
           <CardTitle className="flex items-center gap-2 text-2xl">
             <MessageSquareText className="h-5 w-5 text-primary" />
-            Question Chat
+            {copy.questionChatTitle}
           </CardTitle>
           <CardDescription>
-            {selectedDocumentLabel}. Higher-stakes judgment questions are automatically routed back to the agent.
+            {selectedDocumentLabel}
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
+          {aiPaused ? (
+            <div className="rounded-[24px] border border-amber-200 bg-amber-50 p-5 text-sm leading-7 text-amber-900">
+              {copy.questionPaused}
+            </div>
+          ) : null}
           <div className="max-h-[38rem] space-y-4 overflow-y-auto pr-1">
             {questions.length === 0 ? (
               <div className="rounded-[24px] border border-dashed border-slate-200 bg-slate-50 p-5 text-sm leading-6 text-slate-600">
-                Ask the first question about this transaction or document. Closing Day will answer in context and flag the agent when the question moves into judgment, risk, or emotional territory.
+                {copy.questionChatEmpty}
               </div>
             ) : null}
 
             {questions.map((question) => (
               <div key={question.id} className="rounded-[24px] border border-slate-200 bg-white p-5">
                 <div className="flex flex-wrap items-center gap-2">
-                  <Badge className={getSeverityTone(question.severity)}>Severity {question.severity}</Badge>
+                  <Badge className={getSeverityTone(question.severity)}>{copy.severity} {question.severity}</Badge>
                   {question.routedToAgent ? (
-                    <Badge className="border-rose-200 bg-rose-50 text-rose-700">Routed to agent</Badge>
+                    <Badge className="border-rose-200 bg-rose-50 text-rose-700">{copy.questionRouted}</Badge>
                   ) : null}
-                  <Badge className="border-slate-200 bg-slate-50 text-slate-700">{question.category}</Badge>
+                  <Badge className="border-slate-200 bg-slate-50 text-slate-700">{translateQuestionCategory(language, question.category)}</Badge>
                 </div>
 
                 <p className="mt-3 text-sm font-medium leading-6 text-slate-900">{question.question}</p>
@@ -136,12 +147,12 @@ export function QuestionChat({ transactionId, token, document, questions }: Ques
                   </div>
                   <p className="mt-3 text-sm leading-6 text-slate-700">{question.answer}</p>
                   {question.nextStep ? (
-                    <p className="mt-3 text-sm font-medium text-slate-900">Next step: {question.nextStep}</p>
+                    <p className="mt-3 text-sm font-medium text-slate-900">{copy.questionNextStep}: {question.nextStep}</p>
                   ) : null}
                 </div>
 
                 <div className="mt-4">
-                  <WhyExpansion transparency={question.transparency} />
+                  <WhyExpansion transparency={question.transparency} label={whyLabel} />
                 </div>
               </div>
             ))}
@@ -151,7 +162,7 @@ export function QuestionChat({ transactionId, token, document, questions }: Ques
                 <p className="text-sm font-medium leading-6 text-slate-900">{pendingQuestion}</p>
                 <div className="mt-4 flex items-center gap-2 text-sm text-primary">
                   <LoaderCircle className="h-4 w-4 animate-spin" />
-                  Closing Day is typing...
+                  {copy.questionTyping}
                 </div>
               </div>
             ) : null}
@@ -159,7 +170,8 @@ export function QuestionChat({ transactionId, token, document, questions }: Ques
 
           <form className="space-y-3" onSubmit={form.handleSubmit(submitQuestion)}>
             <Textarea
-              placeholder="Ask what this means, what happens next, or whether something should worry you."
+              placeholder={copy.questionChatPlaceholder}
+              disabled={aiPaused}
               {...form.register("question")}
             />
             {form.formState.errors.question ? (
@@ -168,18 +180,18 @@ export function QuestionChat({ transactionId, token, document, questions }: Ques
 
             <div className="flex flex-wrap items-center justify-between gap-3">
               <p className="text-xs text-slate-500">
-                The answer uses the selected document and transaction context. Judgment calls still go back to your agent.
+                {copy.questionChatFooter}
               </p>
-              <Button disabled={askQuestion.isPending} type="submit">
+              <Button disabled={askQuestion.isPending || aiPaused} type="submit">
                 {askQuestion.isPending ? (
                   <>
                     <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                    Sending...
+                    {copy.questionSending}
                   </>
                 ) : (
                   <>
                     <Send className="mr-2 h-4 w-4" />
-                    Ask Question
+                    {copy.questionAsk}
                   </>
                 )}
               </Button>
@@ -192,7 +204,7 @@ export function QuestionChat({ transactionId, token, document, questions }: Ques
         open={toastState.open}
         title={toastState.title}
         variant="error"
-        actionLabel="Retry"
+        actionLabel={copy.retry}
         {...(toastState.description ? { description: toastState.description } : {})}
         onAction={() => {
           void retryLastQuestion();

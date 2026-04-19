@@ -130,6 +130,9 @@ export function AgentTransactionDocumentsPage() {
               <CardDescription className="max-w-2xl text-base text-teal-50/90">
                 Upload, inspect, and override document summaries for this transaction.
               </CardDescription>
+              <p className="text-sm text-teal-50/90">
+                Agent edits stay visible, explainable, and client-safe. This is where trust gets earned when AI copy needs a human touch.
+              </p>
             </div>
             <div className="flex flex-wrap gap-3">
               <Button asChild className="border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white" variant="outline">
@@ -146,6 +149,26 @@ export function AgentTransactionDocumentsPage() {
             </div>
           </CardHeader>
         </Card>
+
+        <div className="rounded-[28px] border border-emerald-200 bg-gradient-to-r from-emerald-600 to-teal-700 p-5 text-white shadow-glass">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100/90">Document labor saved</p>
+              <p className="mt-2 text-3xl font-semibold">{documents.length * 11} min</p>
+              <p className="mt-1 text-sm text-emerald-100/90">Recovered by starting from a generated explanation instead of drafting from scratch every time.</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100/90">Client confusion reduced</p>
+              <p className="mt-2 text-3xl font-semibold">{documents.reduce((sum, document) => sum + document.questionCount, 0)}</p>
+              <p className="mt-1 text-sm text-emerald-100/90">Tracked questions tied directly to uploaded documents so you can see where edits matter most.</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100/90">Trust lever</p>
+              <p className="mt-2 text-3xl font-semibold">Override live</p>
+              <p className="mt-1 text-sm text-emerald-100/90">Human-reviewed copy can replace the AI draft instantly and shows up to the client in real time.</p>
+            </div>
+          </div>
+        </div>
 
         <div className="grid gap-6 xl:grid-cols-[0.34fr_0.66fr]">
           <div className="space-y-6">
@@ -204,14 +227,14 @@ export function AgentTransactionDocumentsPage() {
           </div>
 
           <div className="space-y-6">
-            <DocumentViewer document={selectedDocument} token={token} />
+            <DocumentViewer document={selectedDocument} token={token} language="en" aiPaused={false} />
 
             {selectedDocument ? (
               <Card>
                 <CardHeader>
                   <CardTitle className="text-2xl">Override Summary</CardTitle>
                   <CardDescription>
-                    Agents stay in control. Edit the AI draft and the updated explanation becomes the client-facing version.
+                    Agents stay in control. Edit the AI draft, publish the client-facing version instantly, and keep the override path obvious for skeptical users.
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">

@@ -2,6 +2,7 @@ import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { AgentLoginPage } from "@/pages/agent/AgentLogin";
 import { AgentBotCallSessionPage } from "@/pages/agent/BotCallSession";
+import { AgentRepeatClientsPage } from "@/pages/agent/RepeatClients";
 import { AgentSettingsPage } from "@/pages/agent/Settings";
 import { AgentTransactionDocumentsPage } from "@/pages/agent/TransactionDocuments";
 import { AgentTriagePage } from "@/pages/agent/Triage";
@@ -18,6 +19,7 @@ export default function App() {
         <Route path="/agent/login" element={<AgentLoginPage />} />
         <Route path="/agent/triage" element={<AgentTriagePage />} />
         <Route path="/agent/voice-bot/:sessionId" element={<AgentBotCallSessionPage />} />
+        <Route path="/agent/repeat-clients" element={<AgentRepeatClientsPage />} />
         <Route path="/agent/settings" element={<AgentSettingsPage />} />
         <Route path="/agent/transactions/:transactionId/documents" element={<AgentTransactionDocumentsPage />} />
         <Route path="/client/login" element={<ClientLoginPage />} />

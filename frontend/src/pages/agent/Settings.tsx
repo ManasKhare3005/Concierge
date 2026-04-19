@@ -8,6 +8,8 @@ import { useAgentAuthStore } from "@/store/agentAuthStore";
 
 export function AgentSettingsPage() {
   const token = useAgentAuthStore((state) => state.token);
+  const nudgesPaused = useAgentAuthStore((state) => state.nudgesPaused);
+  const setNudgesPaused = useAgentAuthStore((state) => state.setNudgesPaused);
   const logout = useAgentAuthStore((state) => state.logout);
 
   if (!token) {
@@ -37,6 +39,26 @@ export function AgentSettingsPage() {
 
         <SystemStatusCard />
 
+        <div className="rounded-[28px] border border-emerald-200 bg-gradient-to-r from-emerald-600 to-teal-700 p-5 text-white shadow-glass">
+          <div className="grid gap-4 md:grid-cols-3">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100/90">Trust posture</p>
+              <p className="mt-2 text-3xl font-semibold">{nudgesPaused ? "Manual" : "Live"}</p>
+              <p className="mt-1 text-sm text-emerald-100/90">Choose whether high-priority nudges interrupt you in real time or stay quietly visible on the board.</p>
+            </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100/90">Override control</p>
+              <p className="mt-2 text-3xl font-semibold">Agent-first</p>
+              <p className="mt-1 text-sm text-emerald-100/90">Document explanations stay editable so no client-facing copy is locked in by automation.</p>
+            </div>
+            <div className="flex items-center md:justify-end">
+              <Button type="button" variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white" onClick={() => setNudgesPaused(!nudgesPaused)}>
+                {nudgesPaused ? "Resume realtime nudges" : "Pause realtime nudges"}
+              </Button>
+            </div>
+          </div>
+        </div>
+
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl">Trust controls</CardTitle>
@@ -46,6 +68,7 @@ export function AgentSettingsPage() {
             <p>Document summaries can be edited by the agent and the latest human-reviewed version appears in the client portal immediately.</p>
             <p>Question answers show whether Groq is live or whether a fallback handled the request.</p>
             <p>Real-time events are in-memory SSE for the demo, so the triage board moves the moment a client acts.</p>
+            <p>You can pause toast-style nudges here without shutting off the underlying realtime data feed.</p>
           </CardContent>
         </Card>
       </div>
