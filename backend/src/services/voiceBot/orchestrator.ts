@@ -1,4 +1,5 @@
 import type {
+  BotScriptTurn,
   BotTone,
   VoiceBotPrepBrief,
   VoiceBotSessionRecord
@@ -75,6 +76,10 @@ interface SessionPatchInput {
   clientNewQuestion?: string;
 }
 
+interface HydrateVoiceBotOptions {
+  includeAudio?: boolean;
+}
+
 export interface InitiateVoiceBotInput {
   agentId: string;
   transactionId: string;
@@ -95,6 +100,25 @@ export interface ConfirmVoiceBotInput {
   sessionId: string;
   bookedSlot: string;
   clientNewQuestion?: string;
+}
+
+export interface RespondToClientVoiceBotInput {
+  transactionId: string;
+  clientAccountId: string;
+  response: string;
+}
+
+export interface ConfirmClientVoiceBotInput {
+  transactionId: string;
+  clientAccountId: string;
+  bookedSlot: string;
+  clientNewQuestion?: string;
+}
+
+export interface UpdateVoiceBotSessionSlotsInput {
+  agentId: string;
+  sessionId: string;
+  proposedSlots: string[];
 }
 
 export interface AutomatedVoiceFollowUpInput {
@@ -177,6 +201,24 @@ function buildAutomatedConcerns(triggeringQuestion: string, topConcerns: string[
     ...topConcerns,
     trimToLength(triggeringQuestion.replace(/\s+/g, " ").trim(), 120)
   ]).slice(0, 3);
+}
+
+function replaceBotTurnsWithPlan(turns: BotScriptTurn[], plan: string[]): BotScriptTurn[] {
+  let botIndex = 0;
+
+  return turns.map((turn) => {
+    if (turn.speaker !== "bot") {
+      return turn;
+    }
+
+    const nextText = plan[botIndex] ?? turn.text;
+    botIndex += 1;
+
+    return {
+      ...turn,
+      text: trimToLength(nextText, 280)
+    };
+  });
 }
 
 async function loadClientSummary(clientAccountId: string): Promise<VoiceBotSessionWithContext["clientAccount"]> {
@@ -311,8 +353,39 @@ async function getSessionWithContext(
   return withSessionContext(session);
 }
 
+async function getLatestSessionWithContextForClient(
+  transactionId: string,
+  clientAccountId: string,
+  statuses?: BotCallSession["status"][]
+): Promise<VoiceBotSessionWithContext | null> {
+  const session = await prisma.botCallSession.findFirst({
+    where: {
+      transactionId,
+      clientAccountId,
+      ...(statuses ? { status: { in: statuses } } : {})
+    },
+    include: {
+      transaction: {
+        select: {
+          propertyAddress: true,
+          propertyCity: true,
+          propertyState: true,
+          propertyZip: true,
+          stageLabel: true
+        }
+      }
+    },
+    orderBy: {
+      createdAt: "desc"
+    }
+  });
+
+  return session ? withSessionContext(session) : null;
+}
+
 async function hydrateVoiceBotSession(
-  session: VoiceBotSessionWithContext
+  session: VoiceBotSessionWithContext,
+  options?: HydrateVoiceBotOptions
 ): Promise<VoiceBotSessionRecord> {
   const storedScript = parseStoredVoiceBotScript(session);
   const topConcerns = parseJsonStringArray(session.topConcerns);
@@ -326,7 +399,7 @@ async function hydrateVoiceBotSession(
     transcript: storedScript.turns
   });
 
-  const currentBotAudio = isOpenSession && presentation.currentBotTurn
+  const currentBotAudio = options?.includeAudio !== false && isOpenSession && presentation.currentBotTurn
     ? await synthesizeSpeech({
         text: presentation.currentBotTurn.text,
         sources: [
@@ -719,6 +792,86 @@ export async function getVoiceBotSession(
   return hydrateVoiceBotSession(session);
 }
 
+export async function getLatestClientVoiceBotSession(
+  transactionId: string,
+  clientAccountId: string
+): Promise<VoiceBotSessionRecord | undefined> {
+  const session = await getLatestSessionWithContextForClient(transactionId, clientAccountId);
+  if (!session) {
+    return undefined;
+  }
+
+  return hydrateVoiceBotSession(session, { includeAudio: false });
+}
+
+export async function getTransactionVoiceBotSessionsForAgent(
+  agentId: string,
+  transactionId: string
+): Promise<VoiceBotSessionRecord[]> {
+  const transaction = await prisma.transaction.findFirst({
+    where: {
+      id: transactionId,
+      agentId
+    },
+    include: {
+      botSessions: {
+        orderBy: {
+          createdAt: "desc"
+        }
+      },
+      clientRoles: {
+        include: {
+          clientAccount: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true
+            }
+          }
+        }
+      }
+    }
+  });
+
+  if (!transaction) {
+    throw new Error("Transaction not found for this agent.");
+  }
+
+  const latestByClient = new Map<string, BotCallSession>();
+  for (const session of transaction.botSessions) {
+    if (!latestByClient.has(session.clientAccountId)) {
+      latestByClient.set(session.clientAccountId, session);
+    }
+  }
+
+  const hydratedSessions = await Promise.all(
+    [...latestByClient.values()].map(async (session) => {
+      const client = transaction.clientRoles.find(
+        (clientRole) => clientRole.clientAccountId === session.clientAccountId
+      )?.clientAccount;
+
+      const sessionWithContext: VoiceBotSessionWithContext = {
+        ...session,
+        transaction: {
+          propertyAddress: transaction.propertyAddress,
+          propertyCity: transaction.propertyCity,
+          propertyState: transaction.propertyState,
+          propertyZip: transaction.propertyZip,
+          stageLabel: transaction.stageLabel
+        },
+        clientAccount: {
+          firstName: client?.firstName ?? "Client",
+          lastName: client?.lastName ?? "Unknown"
+        }
+      };
+
+      return hydrateVoiceBotSession(sessionWithContext, { includeAudio: false });
+    })
+  );
+
+  return hydratedSessions.sort((left, right) => right.createdAt.localeCompare(left.createdAt));
+}
+
 export async function respondToVoiceBotSession(
   input: RespondToVoiceBotInput
 ): Promise<VoiceBotSessionRecord> {
@@ -767,6 +920,61 @@ export async function respondToVoiceBotSession(
   );
 
   return hydrateVoiceBotSession(updatedSession);
+}
+
+export async function respondToClientVoiceBotSession(
+  input: RespondToClientVoiceBotInput
+): Promise<VoiceBotSessionRecord> {
+  const session = await getLatestSessionWithContextForClient(
+    input.transactionId,
+    input.clientAccountId,
+    ["pending", "in_progress"]
+  );
+
+  if (!session) {
+    throw new Error("No active Closing Day follow-up is open for this transaction.");
+  }
+
+  const storedScript = parseStoredVoiceBotScript(session);
+  const topConcerns = parseJsonStringArray(session.topConcerns);
+  const proposedSlots = parseJsonStringArray(session.proposedSlots);
+  const currentPresentation = getSimulatedCallPresentation({
+    clientFirstName: session.clientAccount.firstName,
+    topConcerns,
+    proposedSlots,
+    plan: storedScript.plan,
+    transcript: storedScript.turns
+  });
+
+  if (currentPresentation.canConfirmBooking) {
+    throw new Error("This Closing Day follow-up is ready to confirm a booking.");
+  }
+
+  const nextTranscript = advanceSimulatedCall(
+    {
+      clientFirstName: session.clientAccount.firstName,
+      topConcerns,
+      proposedSlots,
+      plan: storedScript.plan,
+      transcript: storedScript.turns
+    },
+    input.response
+  );
+
+  const extractedQuestion = extractClientQuestion(input.response);
+  const updatedSession = await saveSessionScript(
+    session.id,
+    {
+      ...storedScript,
+      turns: nextTranscript
+    },
+    {
+      status: "in_progress",
+      ...(extractedQuestion ? { clientNewQuestion: extractedQuestion } : {})
+    }
+  );
+
+  return hydrateVoiceBotSession(updatedSession, { includeAudio: false });
 }
 
 export async function confirmVoiceBotSession(
@@ -906,4 +1114,79 @@ export async function confirmVoiceBotSession(
   });
 
   return hydrateVoiceBotSession(updatedSession);
+}
+
+export async function confirmClientVoiceBotSession(
+  input: ConfirmClientVoiceBotInput
+): Promise<VoiceBotSessionRecord> {
+  const session = await getLatestSessionWithContextForClient(
+    input.transactionId,
+    input.clientAccountId,
+    ["pending", "in_progress"]
+  );
+
+  if (!session) {
+    throw new Error("No active Closing Day follow-up is open for this transaction.");
+  }
+
+  const result = await confirmVoiceBotSession({
+    agentId: session.agentId,
+    sessionId: session.id,
+    bookedSlot: input.bookedSlot,
+    ...(input.clientNewQuestion ? { clientNewQuestion: input.clientNewQuestion } : {})
+  });
+
+  return result;
+}
+
+export async function updateVoiceBotSessionSlots(
+  input: UpdateVoiceBotSessionSlotsInput
+): Promise<VoiceBotSessionRecord> {
+  if (input.proposedSlots.length !== 3) {
+    throw new Error("Exactly three proposed meeting slots are required.");
+  }
+
+  const session = await getSessionWithContext(input.agentId, input.sessionId);
+  if (session.status === "booked" || session.status === "declined" || session.status === "failed") {
+    throw new Error("Closed voice bot sessions can no longer change meeting slots.");
+  }
+
+  const transaction = await getTransactionContext(input.agentId, session.transactionId, session.clientAccountId);
+  const client = transaction.clientRoles[0]?.clientAccount;
+  if (!client) {
+    throw new Error("Client was not found on this transaction.");
+  }
+
+  const concerns = parseJsonStringArray(session.topConcerns);
+  const refreshedScript = await buildVoiceBotScript({
+    agentFirstName: transaction.agent.firstName,
+    clientFirstName: client.firstName,
+    propertyAddress: transaction.propertyAddress,
+    stageLabel: transaction.stageLabel,
+    topConcerns: concerns,
+    tone: session.tone as BotTone,
+    proposedSlots: input.proposedSlots
+  });
+
+  const storedScript = parseStoredVoiceBotScript(session);
+  const mergedTurns =
+    storedScript.turns.length > 0
+      ? replaceBotTurnsWithPlan(storedScript.turns, refreshedScript.plan)
+      : buildInitialTranscript(refreshedScript.plan);
+
+  const updatedSession = await saveSessionScript(
+    session.id,
+    {
+      plan: refreshedScript.plan,
+      turns: mergedTurns,
+      generatedBy: refreshedScript.generatedBy,
+      transparency: refreshedScript.transparency
+    },
+    {
+      proposedSlots: JSON.stringify(input.proposedSlots),
+      tone: session.tone
+    }
+  );
+
+  return hydrateVoiceBotSession(updatedSession, { includeAudio: false });
 }

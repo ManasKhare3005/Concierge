@@ -1,4 +1,5 @@
 import type { AiTransparency, BotTone, GeneratedBy } from "@shared";
+import { formatVoiceBotSlotForPrompt } from "@shared";
 import { z } from "zod";
 
 import { runGroqTask } from "../../lib/groq";
@@ -53,6 +54,7 @@ function formatConcernList(concerns: string[]): string {
 
 function buildFallbackPlan(input: VoiceBotScripterInput): string[] {
   const concernText = formatConcernList(input.topConcerns.slice(0, 3));
+  const slotLabels = input.proposedSlots.map((slot) => formatVoiceBotSlotForPrompt(slot));
 
   const opening =
     input.tone === "brief"
@@ -66,8 +68,8 @@ function buildFallbackPlan(input: VoiceBotScripterInput): string[] {
 
   const booking =
     input.tone === "brief"
-      ? `I can hold a short call with ${input.agentFirstName}. One of these times is open: ${input.proposedSlots.join(", ")}. Which one works best, or is there one more question to flag first?`
-      : `I'm going to summarize this for ${input.agentFirstName} so you do not have to repeat the whole story. I can hold one of these times for a focused call: ${input.proposedSlots.join(", ")}. Which one feels best, or is there one more question you want covered?`;
+      ? `I can hold a short call with ${input.agentFirstName}. One of these times is open: ${slotLabels.join(", ")}. Which one works best, or is there one more question to flag first?`
+      : `I'm going to summarize this for ${input.agentFirstName} so you do not have to repeat the whole story. I can hold one of these times for a focused call: ${slotLabels.join(", ")}. Which one feels best, or is there one more question you want covered?`;
 
   return [opening, followUp, booking].map((line) => trimToLength(line, 280));
 }

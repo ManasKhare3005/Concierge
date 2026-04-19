@@ -6,7 +6,6 @@ import { cn } from "@/lib/utils";
 interface TriageBoardProps {
   grouped: Record<AgentTriageBucketKey, AgentTriageCardType[]>;
   highlightedClientIds: string[];
-  onCallWithBot: (card: AgentTriageCardType) => void;
   onDraftText: (card: AgentTriageCardType) => void;
 }
 
@@ -42,7 +41,7 @@ const columns: Array<{
   }
 ];
 
-export function TriageBoard({ grouped, highlightedClientIds, onCallWithBot, onDraftText }: TriageBoardProps) {
+export function TriageBoard({ grouped, highlightedClientIds, onDraftText }: TriageBoardProps) {
   return (
     <div className="grid gap-4 xl:grid-cols-4">
       {columns.map((column) => (
@@ -65,7 +64,6 @@ export function TriageBoard({ grouped, highlightedClientIds, onCallWithBot, onDr
                 key={`${card.transactionId}:${card.clientAccountId}`}
                 card={card}
                 highlighted={highlightedClientIds.includes(card.clientAccountId)}
-                onCallWithBot={onCallWithBot}
                 onDraftText={onDraftText}
               />
             ))}

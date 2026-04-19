@@ -217,17 +217,12 @@ export async function buildAgentTriage(agentId: string): Promise<AgentTriageResp
       const latestQuestion = transaction.questions.find(
         (question) => question.clientAccountId === clientRole.clientAccountId
       );
-      const bookedSession = transaction.botSessions.find(
-        (session) => session.clientAccountId === clientRole.clientAccountId && session.status === "booked"
-      );
-      const pendingSession = transaction.botSessions.find(
-        (session) =>
-          session.clientAccountId === clientRole.clientAccountId &&
-          (session.status === "pending" || session.status === "in_progress")
+      const latestBotSession = transaction.botSessions.find(
+        (session) => session.clientAccountId === clientRole.clientAccountId
       );
 
       const baseBucket = bucketLabelFromReadiness(latestReadiness?.bucket);
-      const bucket: AgentTriageBucketKey = bookedSession ? "booked" : baseBucket;
+      const bucket: AgentTriageBucketKey = latestBotSession?.status === "booked" ? "booked" : baseBucket;
       const topConcerns = latestReadiness ? parseTopConcerns(latestReadiness.topConcerns) : [];
       const roiMinutesSaved = roiMinutesForBucket(bucket);
       const roiDollarsProtected = roiDollarsForCard(bucket, transaction.propertyPrice);
@@ -289,13 +284,16 @@ export async function buildAgentTriage(agentId: string): Promise<AgentTriageResp
           propertyAddress: transaction.propertyAddress,
           topConcerns
         }),
-        ...(bookedSession?.bookedSlot ? { bookedSlot: bookedSession.bookedSlot.toISOString() } : {}),
-        ...(pendingSession
+        ...(latestBotSession?.status === "booked" && latestBotSession.bookedSlot
+          ? { bookedSlot: latestBotSession.bookedSlot.toISOString() }
+          : {}),
+        ...(latestBotSession &&
+        (latestBotSession.status === "pending" || latestBotSession.status === "in_progress")
           ? {
-              pendingBotSessionId: pendingSession.id,
-              pendingBotTone: pendingSession.tone as NonNullable<AgentTriageCard["pendingBotTone"]>,
-              pendingBotConcerns: parseTopConcerns(pendingSession.topConcerns),
-              pendingBotProposedSlots: parseProposedSlots(pendingSession.proposedSlots)
+              pendingBotSessionId: latestBotSession.id,
+              pendingBotTone: latestBotSession.tone as NonNullable<AgentTriageCard["pendingBotTone"]>,
+              pendingBotConcerns: parseTopConcerns(latestBotSession.topConcerns),
+              pendingBotProposedSlots: parseProposedSlots(latestBotSession.proposedSlots)
             }
           : {})
       };

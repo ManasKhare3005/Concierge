@@ -17,6 +17,11 @@ interface ConfirmBotCallPayload {
   clientNewQuestion?: string;
 }
 
+interface UpdateBotSlotsPayload {
+  sessionId: string;
+  proposedSlots: string[];
+}
+
 function authHeaders(token: string | null) {
   return token ? { headers: { Authorization: `Bearer ${token}` } } : {};
 }
@@ -98,6 +103,88 @@ export function useConfirmBotCall(token: string | null) {
     onSuccess: (session) => {
       void queryClient.invalidateQueries({ queryKey: ["agent", "triage"] });
       void queryClient.invalidateQueries({ queryKey: ["agent", "me"] });
+      queryClient.setQueryData(["agent", "voice-bot-session", session.id], session);
+    }
+  });
+}
+
+export function useUpdateBotSlots(token: string | null) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: UpdateBotSlotsPayload) => {
+      const response = await api.post<{ session: VoiceBotSessionRecord }>(
+        `/api/agent/voice-bot/${payload.sessionId}/slots`,
+        {
+          proposedSlots: payload.proposedSlots
+        },
+        authHeaders(token)
+      );
+
+      return response.data.session;
+    },
+    onSuccess: (session) => {
+      void queryClient.invalidateQueries({ queryKey: ["agent", "triage"] });
+      void queryClient.invalidateQueries({ queryKey: ["agent", "transaction-documents", session.transactionId] });
+      void queryClient.invalidateQueries({ queryKey: ["client", "transaction-documents", session.transactionId] });
+      queryClient.setQueryData(["agent", "voice-bot-session", session.id], session);
+    }
+  });
+}
+
+export function useRespondToClientBotCall(transactionId: string, token: string | null) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: { response: string }) => {
+      const response = await api.post<{ session: VoiceBotSessionRecord }>(
+        `/api/client/transactions/${transactionId}/voice-bot/respond`,
+        {
+          response: payload.response
+        },
+        authHeaders(token)
+      );
+
+      return response.data.session;
+    },
+    onSuccess: async (session) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["client", "transaction-documents", transactionId] }),
+        queryClient.invalidateQueries({ queryKey: ["client", "portfolio"] }),
+        queryClient.invalidateQueries({ queryKey: ["agent", "triage"] }),
+        queryClient.invalidateQueries({ queryKey: ["agent", "transaction-documents", transactionId] })
+      ]);
+
+      queryClient.setQueryData(["agent", "voice-bot-session", session.id], session);
+    }
+  });
+}
+
+export function useConfirmClientBotCall(transactionId: string, token: string | null) {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: { bookedSlot: string; clientNewQuestion?: string }) => {
+      const response = await api.post<{ session: VoiceBotSessionRecord }>(
+        `/api/client/transactions/${transactionId}/voice-bot/confirm`,
+        {
+          bookedSlot: payload.bookedSlot,
+          ...(payload.clientNewQuestion ? { clientNewQuestion: payload.clientNewQuestion } : {})
+        },
+        authHeaders(token)
+      );
+
+      return response.data.session;
+    },
+    onSuccess: async (session) => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ["client", "transaction-documents", transactionId] }),
+        queryClient.invalidateQueries({ queryKey: ["client", "portfolio"] }),
+        queryClient.invalidateQueries({ queryKey: ["agent", "triage"] }),
+        queryClient.invalidateQueries({ queryKey: ["agent", "me"] }),
+        queryClient.invalidateQueries({ queryKey: ["agent", "transaction-documents", transactionId] })
+      ]);
+
       queryClient.setQueryData(["agent", "voice-bot-session", session.id], session);
     }
   });

@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import type { DocumentRecordDetail } from "@shared";
+import type { DocumentRecordDetail, VoiceBotSessionRecord } from "@shared";
 
 import { api } from "@/lib/api";
 
@@ -41,6 +41,7 @@ export interface AgentTransactionDocumentsResponse {
     }>;
   };
   documents: DocumentRecordDetail[];
+  voiceBotSessions: VoiceBotSessionRecord[];
 }
 
 export function useAgentTransactions(token: string | null) {
@@ -62,6 +63,8 @@ export function useAgentTransactionDocuments(transactionId: string | undefined, 
   return useQuery({
     queryKey: ["agent", "transaction-documents", transactionId, token],
     enabled: Boolean(transactionId && token),
+    refetchInterval: 4000,
+    refetchIntervalInBackground: true,
     queryFn: async () => {
       const response = await api.get<AgentTransactionDocumentsResponse>(
         `/api/agent/transactions/${transactionId}/documents`,

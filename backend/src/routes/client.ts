@@ -18,6 +18,11 @@ import {
 } from "../services/clientPortal/repository";
 import { mapDocumentRecord } from "../services/documents/repository";
 import { emitRealtimeEvent } from "../services/sync/realtime";
+import {
+  confirmClientVoiceBotSession,
+  getLatestClientVoiceBotSession,
+  respondToClientVoiceBotSession
+} from "../services/voiceBot/orchestrator";
 
 const router = Router();
 
@@ -28,6 +33,15 @@ const askQuestionSchema = z.object({
 
 const checkInSchema = z.object({
   response: z.string().trim().min(3).max(600)
+});
+
+const voiceBotResponseSchema = z.object({
+  response: z.string().trim().min(2).max(400)
+});
+
+const voiceBotConfirmSchema = z.object({
+  bookedSlot: z.string().datetime(),
+  clientNewQuestion: z.string().trim().min(3).max(400).optional()
 });
 
 const clientSearchProfileSchema = z.object({
@@ -57,6 +71,16 @@ const updateProfileSchema = z.object({
   searchProfile: clientSearchProfileSchema
 });
 
+const callMeSchema = z.object({
+  phone: z
+    .string()
+    .trim()
+    .min(7)
+    .max(24)
+    .regex(/^\+?[0-9()\-\s]+$/)
+    .optional()
+});
+
 function buildClientProfileResponse(client: {
   id: string;
   email: string;
@@ -84,6 +108,23 @@ function buildClientProfileResponse(client: {
   };
 }
 
+function parseJsonStringArray(value?: string | null): string[] {
+  if (!value) {
+    return [];
+  }
+
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return parsed.filter((entry): entry is string => typeof entry === "string");
+  } catch {
+    return [];
+  }
+}
+
 router.get("/portfolio", requireClientAuth, async (request, response) => {
   const clientSession = request.clientSession;
   if (!clientSession) {
@@ -98,12 +139,30 @@ router.get("/portfolio", requireClientAuth, async (request, response) => {
       }
     },
     include: {
-      clientRoles: {
-        where: {
-          clientAccountId: clientSession.clientAccountId
+      agent: {
+        select: {
+          firstName: true,
+          lastName: true,
+          brokerage: true
         }
       },
-      documents: true,
+      clientRoles: {
+        include: {
+          clientAccount: {
+            select: {
+              id: true,
+              firstName: true,
+              lastName: true
+            }
+          }
+        }
+      },
+      documents: {
+        select: {
+          id: true,
+          openedByClient: true
+        }
+      },
       readiness: {
         where: {
           clientAccountId: clientSession.clientAccountId
@@ -112,6 +171,48 @@ router.get("/portfolio", requireClientAuth, async (request, response) => {
           computedAt: "desc"
         },
         take: 1
+      },
+      questions: {
+        where: {
+          clientAccountId: clientSession.clientAccountId
+        },
+        orderBy: {
+          askedAt: "desc"
+        },
+        select: {
+          question: true,
+          category: true,
+          severity: true,
+          askedAt: true
+        }
+      },
+      sentiments: {
+        where: {
+          clientAccountId: clientSession.clientAccountId
+        },
+        orderBy: {
+          createdAt: "desc"
+        },
+        take: 1,
+        select: {
+          sentiment: true,
+          createdAt: true,
+          agentAlertNeeded: true
+        }
+      },
+      botSessions: {
+        where: {
+          clientAccountId: clientSession.clientAccountId
+        },
+        orderBy: {
+          createdAt: "desc"
+        },
+        take: 1,
+        select: {
+          status: true,
+          bookedSlot: true,
+          createdAt: true
+        }
       }
     },
     orderBy: [
@@ -137,9 +238,58 @@ router.get("/portfolio", requireClientAuth, async (request, response) => {
       stageLabel: transaction.stageLabel,
       expectedCloseAt: transaction.expectedCloseAt?.toISOString(),
       closedAt: transaction.closedAt?.toISOString(),
-      relationshipRole: transaction.clientRoles[0]?.role ?? "client",
+      relationshipRole:
+        transaction.clientRoles.find(
+          (clientRole) => clientRole.clientAccount.id === clientSession.clientAccountId
+        )?.role ?? "client",
       documentCount: transaction.documents.length,
-      readinessBucket: transaction.readiness[0]?.bucket ?? undefined
+      openedDocumentCount: transaction.documents.filter((document) => document.openedByClient).length,
+      questionCount: transaction.questions.length,
+      readinessBucket: transaction.readiness[0]?.bucket ?? undefined,
+      readinessReasoning: transaction.readiness[0]?.reasoning ?? undefined,
+      topConcerns: parseJsonStringArray(transaction.readiness[0]?.topConcerns),
+      agent: {
+        firstName: transaction.agent.firstName,
+        lastName: transaction.agent.lastName,
+        ...(transaction.agent.brokerage ? { brokerage: transaction.agent.brokerage } : {})
+      },
+      participants: transaction.clientRoles.map((clientRole) => ({
+        id: clientRole.clientAccount.id,
+        firstName: clientRole.clientAccount.firstName,
+        lastName: clientRole.clientAccount.lastName,
+        role: clientRole.role,
+        isYou: clientRole.clientAccount.id === clientSession.clientAccountId
+      })),
+      ...(transaction.questions[0]
+        ? {
+            latestQuestion: {
+              question: transaction.questions[0].question,
+              category: transaction.questions[0].category,
+              severity: transaction.questions[0].severity,
+              askedAt: transaction.questions[0].askedAt.toISOString()
+            }
+          }
+        : {}),
+      ...(transaction.sentiments[0]
+        ? {
+            latestSentiment: {
+              sentiment: transaction.sentiments[0].sentiment,
+              createdAt: transaction.sentiments[0].createdAt.toISOString(),
+              agentAlertNeeded: transaction.sentiments[0].agentAlertNeeded
+            }
+          }
+        : {}),
+      ...(transaction.botSessions[0]
+        ? {
+            latestBotCall: {
+              status: transaction.botSessions[0].status,
+              createdAt: transaction.botSessions[0].createdAt.toISOString(),
+              ...(transaction.botSessions[0].bookedSlot
+                ? { bookedSlot: transaction.botSessions[0].bookedSlot.toISOString() }
+                : {})
+            }
+          }
+        : {})
     }))
   });
 });
@@ -213,6 +363,15 @@ router.post("/profile/call-me", requireClientAuth, async (request, response) => 
     return;
   }
 
+  const parsedBody = callMeSchema.safeParse(request.body);
+  if (!parsedBody.success) {
+    response.status(400).json({
+      message: "Invalid call request payload.",
+      issues: parsedBody.error.flatten()
+    });
+    return;
+  }
+
   const client = await prisma.clientAccount.findUnique({
     where: {
       id: clientSession.clientAccountId
@@ -224,7 +383,10 @@ router.post("/profile/call-me", requireClientAuth, async (request, response) => 
     return;
   }
 
-  if (!client.phone) {
+  const requestedPhone = parsedBody.data.phone?.trim();
+  const phoneToCall = requestedPhone || client.phone;
+
+  if (!phoneToCall) {
     response.status(400).json({
       message: "Add a phone number to your profile before requesting a call."
     });
@@ -232,10 +394,11 @@ router.post("/profile/call-me", requireClientAuth, async (request, response) => 
   }
 
   const callResult = await initiateOutboundCall({
-    toNumber: client.phone,
+    toNumber: phoneToCall,
     sources: [
       `client:${client.id}`,
       `email:${client.email}`,
+      `phone:${phoneToCall}`,
       `profile:${client.searchProfileJson ? "complete" : "basic"}`
     ]
   });
@@ -342,6 +505,8 @@ router.get("/transactions/:id/documents", requireClientAuth, async (request, res
     return;
   }
 
+  const voiceBotSession = await getLatestClientVoiceBotSession(transactionId, clientSession.clientAccountId);
+
   response.json({
     transaction: {
       id: transaction.id,
@@ -359,8 +524,94 @@ router.get("/transactions/:id/documents", requireClientAuth, async (request, res
     },
     documents: transaction.documents.map((document) => mapDocumentRecord(document)),
     questions: transaction.questions.map((question) => mapQuestionRecord(question)),
+    ...(voiceBotSession ? { voiceBotSession } : {}),
     ...(transaction.sentiments[0] ? { latestSentiment: mapSentimentEntry(transaction.sentiments[0]) } : {})
   });
+});
+
+router.post("/transactions/:id/voice-bot/respond", requireClientAuth, async (request, response) => {
+  const clientSession = request.clientSession;
+  const transactionId = request.params["id"];
+
+  if (!clientSession) {
+    response.status(401).json({ message: "Missing client session." });
+    return;
+  }
+
+  if (typeof transactionId !== "string") {
+    response.status(400).json({ message: "Invalid transaction id." });
+    return;
+  }
+
+  if (!clientSession.accessibleTransactionIds.includes(transactionId)) {
+    response.status(403).json({ message: "You do not have access to this transaction." });
+    return;
+  }
+
+  const parsedBody = voiceBotResponseSchema.safeParse(request.body);
+  if (!parsedBody.success) {
+    response.status(400).json({
+      message: "Invalid voice-bot response payload.",
+      issues: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  try {
+    const session = await respondToClientVoiceBotSession({
+      transactionId,
+      clientAccountId: clientSession.clientAccountId,
+      response: parsedBody.data.response
+    });
+
+    response.json({ session });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to advance the Closing Day follow-up.";
+    response.status(message.includes("not found") ? 404 : 400).json({ message });
+  }
+});
+
+router.post("/transactions/:id/voice-bot/confirm", requireClientAuth, async (request, response) => {
+  const clientSession = request.clientSession;
+  const transactionId = request.params["id"];
+
+  if (!clientSession) {
+    response.status(401).json({ message: "Missing client session." });
+    return;
+  }
+
+  if (typeof transactionId !== "string") {
+    response.status(400).json({ message: "Invalid transaction id." });
+    return;
+  }
+
+  if (!clientSession.accessibleTransactionIds.includes(transactionId)) {
+    response.status(403).json({ message: "You do not have access to this transaction." });
+    return;
+  }
+
+  const parsedBody = voiceBotConfirmSchema.safeParse(request.body);
+  if (!parsedBody.success) {
+    response.status(400).json({
+      message: "Invalid voice-bot confirmation payload.",
+      issues: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  try {
+    const session = await confirmClientVoiceBotSession({
+      transactionId,
+      clientAccountId: clientSession.clientAccountId,
+      bookedSlot: parsedBody.data.bookedSlot,
+      ...(parsedBody.data.clientNewQuestion ? { clientNewQuestion: parsedBody.data.clientNewQuestion } : {})
+    });
+
+    response.json({ session });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to confirm the Closing Day meeting.";
+    response.status(message.includes("not found") ? 404 : 400).json({ message });
+  }
 });
 
 router.post("/transactions/:id/questions", requireClientAuth, async (request, response) => {
@@ -418,7 +669,8 @@ router.post("/transactions/:id/questions", requireClientAuth, async (request, re
     response.status(201).json({
       question: result.question,
       sentiment: result.sentiment,
-      readiness: result.readiness
+      readiness: result.readiness,
+      ...(result.autoFollowUp ? { autoFollowUp: result.autoFollowUp } : {})
     });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to submit question.";

@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { FileStack, LogOut } from "lucide-react";
 import { Link, Navigate, useParams } from "react-router-dom";
 
+import { ClientConversationPanel } from "@/components/agent/ClientConversationPanel";
 import { DocumentUploader } from "@/components/agent/DocumentUploader";
 import { DocumentViewer } from "@/components/client/DocumentViewer";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ export function AgentTransactionDocumentsPage() {
 
   const activeTransactions = transactionsQuery.data?.transactions ?? [];
   const documents = documentsQuery.data?.documents ?? [];
+  const voiceBotSessions = documentsQuery.data?.voiceBotSessions ?? [];
   const selectedDocument =
     documents.find((document) => document.id === selectedDocumentId) ?? documents[0] ?? null;
 
@@ -135,12 +137,12 @@ export function AgentTransactionDocumentsPage() {
               </p>
             </div>
             <div className="flex flex-wrap gap-3">
-              <Button asChild className="border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white" variant="outline">
+              <Button asChild className="hover:text-white" variant="glass">
                 <Link to="/agent/triage">Back to Triage</Link>
               </Button>
               <Button
-                className="border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white"
-                variant="outline"
+                className="hover:text-white"
+                variant="glass"
                 onClick={logout}
               >
                 <LogOut className="mr-2 h-4 w-4" />
@@ -281,6 +283,29 @@ export function AgentTransactionDocumentsPage() {
                 </CardContent>
               </Card>
             ) : null}
+
+            <section className="space-y-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-2xl">Client Conversation View</CardTitle>
+                  <CardDescription>
+                    This is where you can read the Closing Day follow-up conversation and adjust the meeting slots without touching the client-facing bot controls directly.
+                  </CardDescription>
+                </CardHeader>
+              </Card>
+
+              {voiceBotSessions.length === 0 ? (
+                <Card>
+                  <CardContent className="p-6 text-sm leading-6 text-slate-600">
+                    No Closing Day conversation has been triggered for this transaction yet. When a client question crosses into higher concern, the follow-up thread will appear here automatically.
+                  </CardContent>
+                </Card>
+              ) : (
+                voiceBotSessions.map((session) => (
+                  <ClientConversationPanel key={session.id} session={session} token={token} />
+                ))
+              )}
+            </section>
           </div>
         </div>
       </div>

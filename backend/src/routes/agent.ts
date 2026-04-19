@@ -5,6 +5,7 @@ import { requireAgentAuth } from "../middleware/agentAuth";
 import { mapDocumentRecord } from "../services/documents/repository";
 import { buildAgentTriage } from "../services/triage/dashboard";
 import { buildRepeatClients } from "../services/triage/repeatClients";
+import { getTransactionVoiceBotSessionsForAgent } from "../services/voiceBot/orchestrator";
 
 const router = Router();
 
@@ -129,6 +130,8 @@ router.get("/transactions/:id/documents", requireAgentAuth, async (request, resp
     return;
   }
 
+  const voiceBotSessions = await getTransactionVoiceBotSessionsForAgent(agentId, transactionId);
+
   response.json({
     transaction: {
       id: transaction.id,
@@ -146,7 +149,8 @@ router.get("/transactions/:id/documents", requireAgentAuth, async (request, resp
         role: clientRole.role
       }))
     },
-    documents: transaction.documents.map((document) => mapDocumentRecord(document))
+    documents: transaction.documents.map((document) => mapDocumentRecord(document)),
+    voiceBotSessions
   });
 });
 

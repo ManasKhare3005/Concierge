@@ -1,9 +1,9 @@
 import type { AgentTriageCard } from "@shared";
+import { formatVoiceBotSlotLabel } from "@shared";
 import {
   ArrowDownRight,
   ArrowRight,
   ArrowUpRight,
-  Bot,
   MessageSquareText,
   ExternalLink,
   Globe2,
@@ -18,7 +18,6 @@ import { cn } from "@/lib/utils";
 interface TriageCardProps {
   card: AgentTriageCard;
   highlighted: boolean;
-  onCallWithBot: (card: AgentTriageCard) => void;
   onDraftText: (card: AgentTriageCard) => void;
 }
 
@@ -57,7 +56,7 @@ function interestTone(signal: AgentTriageCard["propertyInterestSignal"]): string
   return "border-emerald-200 bg-emerald-50 text-emerald-700";
 }
 
-export function TriageCard({ card, highlighted, onCallWithBot, onDraftText }: TriageCardProps) {
+export function TriageCard({ card, highlighted, onDraftText }: TriageCardProps) {
   return (
     <Card className={cn(highlighted && "highlight-flash")}>
       <CardHeader className="space-y-4">
@@ -129,11 +128,21 @@ export function TriageCard({ card, highlighted, onCallWithBot, onDraftText }: Tr
           <p className="mt-2 text-sm text-emerald-800">Estimated value protected: ${card.roiDollarsProtected.toLocaleString()}</p>
         </div>
 
-        <div className="grid gap-2 sm:grid-cols-3">
-          <Button onClick={() => onCallWithBot(card)} type="button" variant="accent">
-            <Bot className="mr-2 h-4 w-4" />
-            Call with bot
-          </Button>
+        {card.bookedSlot ? (
+          <div className="rounded-[22px] border border-sky-200 bg-sky-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-sky-800">Meeting booked</p>
+            <p className="mt-2 text-sm font-medium text-sky-950">{formatVoiceBotSlotLabel(card.bookedSlot)}</p>
+          </div>
+        ) : card.pendingBotSessionId ? (
+          <div className="rounded-[22px] border border-slate-200 bg-slate-50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">Closing Day follow-up</p>
+            <p className="mt-2 text-sm leading-6 text-slate-700">
+              The client has an active guided conversation. Open detail to review the transcript or adjust the meeting slots.
+            </p>
+          </div>
+        ) : null}
+
+        <div className="grid gap-2 sm:grid-cols-2">
           <Button onClick={() => onDraftText(card)} type="button" variant="outline">
             <MessageSquareText className="mr-2 h-4 w-4" />
             Draft text

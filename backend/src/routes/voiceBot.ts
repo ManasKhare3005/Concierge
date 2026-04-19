@@ -6,7 +6,8 @@ import {
   confirmVoiceBotSession,
   getVoiceBotSession,
   initiateVoiceBotSession,
-  respondToVoiceBotSession
+  respondToVoiceBotSession,
+  updateVoiceBotSessionSlots
 } from "../services/voiceBot/orchestrator";
 
 const router = Router();
@@ -26,6 +27,10 @@ const respondSchema = z.object({
 const confirmSchema = z.object({
   bookedSlot: z.string().datetime(),
   clientNewQuestion: z.string().trim().min(3).max(400).optional()
+});
+
+const updateSlotsSchema = z.object({
+  proposedSlots: z.array(z.string().datetime()).length(3)
 });
 
 router.use(requireAgentAuth);
@@ -155,6 +160,42 @@ router.post("/:sessionId/confirm", async (request, response) => {
     response.json({ session });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Unable to confirm the voice bot booking.";
+    response.status(message.includes("not found") ? 404 : 400).json({ message });
+  }
+});
+
+router.post("/:sessionId/slots", async (request, response) => {
+  const agentId = request.agent?.agentId;
+  const sessionId = request.params["sessionId"];
+
+  if (!agentId) {
+    response.status(401).json({ message: "Missing agent session." });
+    return;
+  }
+
+  if (typeof sessionId !== "string") {
+    response.status(400).json({ message: "Invalid session id." });
+    return;
+  }
+
+  const parsedBody = updateSlotsSchema.safeParse(request.body);
+  if (!parsedBody.success) {
+    response.status(400).json({
+      message: "Invalid meeting-slot payload.",
+      issues: parsedBody.error.flatten()
+    });
+    return;
+  }
+
+  try {
+    const session = await updateVoiceBotSessionSlots({
+      agentId,
+      sessionId,
+      proposedSlots: parsedBody.data.proposedSlots
+    });
+    response.json({ session });
+  } catch (error) {
+    const message = error instanceof Error ? error.message : "Unable to update the voice bot meeting slots.";
     response.status(message.includes("not found") ? 404 : 400).json({ message });
   }
 });

@@ -3,7 +3,8 @@ import type {
   DocumentRecordDetail,
   QuestionRecord,
   ReadinessSnapshotRecord,
-  SentimentSnapshot
+  SentimentSnapshot,
+  VoiceBotSessionRecord
 } from "@shared";
 
 import { api } from "@/lib/api";
@@ -26,6 +27,7 @@ export interface ClientTransactionDocumentsResponse {
   documents: DocumentRecordDetail[];
   questions: QuestionRecord[];
   latestSentiment?: SentimentSnapshot;
+  voiceBotSession?: VoiceBotSessionRecord;
 }
 
 export function useClientDocuments(transactionId: string | undefined, token: string | null) {

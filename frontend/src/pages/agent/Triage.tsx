@@ -3,11 +3,10 @@ import type { AgentActivityItem, AgentTriageCard, RealtimeEventPayloadMap } from
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { BellRing, LogOut, RadioTower } from "lucide-react";
-import { Navigate, useNavigate } from "react-router-dom";
+import { Navigate } from "react-router-dom";
 
 import { ActivityFeed } from "@/components/agent/ActivityFeed";
 import { AgentShell } from "@/components/agent/AgentShell";
-import { BotCallModal } from "@/components/agent/BotCallModal";
 import { RoiRibbon } from "@/components/agent/RoiRibbon";
 import { TriageBoard } from "@/components/agent/TriageBoard";
 import { Toast } from "@/components/shared/Toast";
@@ -15,7 +14,6 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAgentEventStream } from "@/hooks/useAgentEventStream";
-import { useInitiateBotCall } from "@/hooks/useBotCall";
 import { useTriage } from "@/hooks/useTriage";
 import { api } from "@/lib/api";
 import { useAgentAuthStore } from "@/store/agentAuthStore";
@@ -56,15 +54,12 @@ function dedupeActivity(items: AgentActivityItem[]): AgentActivityItem[] {
 }
 
 export function AgentTriagePage() {
-  const navigate = useNavigate();
   const token = useAgentAuthStore((state) => state.token);
   const nudgesPaused = useAgentAuthStore((state) => state.nudgesPaused);
   const logout = useAgentAuthStore((state) => state.logout);
   const triageQuery = useTriage(token);
   const agentEvents = useAgentEventStream(token);
-  const initiateBotCall = useInitiateBotCall(token);
   const [highlightedClientIds, setHighlightedClientIds] = useState<string[]>([]);
-  const [selectedBotCard, setSelectedBotCard] = useState<AgentTriageCard | null>(null);
   const [toastState, setToastState] = useState<{
     open: boolean;
     title: string;
@@ -216,31 +211,6 @@ export function AgentTriagePage() {
     }
   }
 
-  async function handleCallWithBotStart(payload: {
-    transactionId: string;
-    clientAccountId: string;
-    concerns: string[];
-    tone: "warm" | "brief" | "detailed";
-    proposedSlots: string[];
-  }) {
-    try {
-      const session = await initiateBotCall.mutateAsync(payload);
-      setSelectedBotCard(null);
-      navigate(`/agent/voice-bot/${session.id}`);
-    } catch (error) {
-      setToastState({
-        open: true,
-        title: "Could not start the bot call",
-        description: error instanceof Error ? error.message : "The simulated call session did not start.",
-        variant: "error"
-      });
-    }
-  }
-
-  function handleCallWithBot(card: AgentTriageCard) {
-    setSelectedBotCard(card);
-  }
-
   return (
     <>
       <motion.main initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
@@ -250,8 +220,8 @@ export function AgentTriagePage() {
               <CardHeader className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                 <div className="space-y-3">
                   <div className="flex flex-wrap items-center gap-3">
-                    <Badge className="w-fit border-white/20 bg-white/10 text-white">Realtime triage live</Badge>
-                    <Badge className="w-fit border-white/20 bg-white/10 text-white">
+                    <Badge className="w-fit" variant="glass">Realtime triage live</Badge>
+                    <Badge className="w-fit" variant="glass">
                       <RadioTower className="mr-1.5 h-3.5 w-3.5" />
                       {agentEvents.connectionState === "open"
                         ? "Realtime connected"
@@ -273,8 +243,8 @@ export function AgentTriagePage() {
                   ) : null}
                 </div>
                 <Button
-                  variant="outline"
-                  className="border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white"
+                  variant="glass"
+                  className="hover:text-white"
                   onClick={logout}
                 >
                   <LogOut className="mr-2 h-4 w-4" />
@@ -303,9 +273,9 @@ export function AgentTriagePage() {
                   body: "Clients Closing Day can keep moving with lighter intervention."
                 },
                 {
-                  label: "Pending Bot Calls",
+                  label: "Client Bot Follow-Ups",
                   value: counts.pendingBotCalls,
-                  body: "Queued bot-assisted conversations waiting to be started."
+                  body: "Active Closing Day follow-ups that now live in the client transaction view."
                 }
               ].map((item) => (
                 <Card key={item.label}>
@@ -323,7 +293,6 @@ export function AgentTriagePage() {
             <TriageBoard
               grouped={triageQuery.data.grouped}
               highlightedClientIds={highlightedClientIds}
-              onCallWithBot={handleCallWithBot}
               onDraftText={handleDraftText}
             />
 
@@ -352,17 +321,6 @@ export function AgentTriagePage() {
         variant={toastState.variant}
         {...(toastState.description ? { description: toastState.description } : {})}
         onClose={() => setToastState((current) => ({ ...current, open: false }))}
-      />
-      <BotCallModal
-        open={selectedBotCard !== null}
-        card={selectedBotCard}
-        loading={initiateBotCall.isPending}
-        onOpenChange={(open) => {
-          if (!open) {
-            setSelectedBotCard(null);
-          }
-        }}
-        onStart={handleCallWithBotStart}
       />
     </>
   );

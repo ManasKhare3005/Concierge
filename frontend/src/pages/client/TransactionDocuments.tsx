@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link, Navigate, useParams } from "react-router-dom";
 
-import { CheckInBox } from "@/components/client/CheckInBox";
 import { ClientShell } from "@/components/client/ClientShell";
 import { DocumentViewer } from "@/components/client/DocumentViewer";
 import { LanguageToggle } from "@/components/client/LanguageToggle";
 import { QuestionChat } from "@/components/client/QuestionChat";
 import { SaveProgressPrompt } from "@/components/client/SaveProgressPrompt";
 import { TrustBanner } from "@/components/client/TrustBanner";
+import { VoiceConcierge } from "@/components/client/VoiceConcierge";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -74,7 +74,7 @@ export function ClientTransactionDocumentsPage() {
     return <Navigate to="/client/portfolio" replace />;
   }
 
-  const { transaction, documents, questions, latestSentiment } = documentsQuery.data;
+  const { transaction, documents, questions, voiceBotSession } = documentsQuery.data;
   const { saveProgressSuggested } = clientProfileQuery.data;
   const selectedDocument =
     documents.find((document) => document.id === selectedDocumentId) ?? documents[0] ?? null;
@@ -193,13 +193,11 @@ export function ClientTransactionDocumentsPage() {
             language={language}
             aiPaused={aiAssistPaused}
           />
-          <CheckInBox
+          <VoiceConcierge
             token={token}
             transactionId={transactionId}
             language={language}
-            aiPaused={aiAssistPaused}
-            {...(latestSentiment ? { latestSentiment } : {})}
-            {...(transaction.readiness ? { readiness: transaction.readiness } : {})}
+            {...(voiceBotSession ? { session: voiceBotSession } : {})}
           />
         </div>
       </div>
