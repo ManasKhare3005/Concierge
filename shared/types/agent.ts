@@ -1,3 +1,5 @@
+import type { BotTone } from "./voiceBot";
+
 export type ServiceState = "configured" | "live" | "fallback" | "demo" | "error";
 
 export interface ServiceStatus {
@@ -70,6 +72,10 @@ export interface AgentTriageCard {
   roiLabel: string;
   draftText: string;
   bookedSlot?: string;
+  pendingBotSessionId?: string;
+  pendingBotTone?: BotTone;
+  pendingBotConcerns?: string[];
+  pendingBotProposedSlots?: string[];
 }
 
 export interface AgentTriageRoi {

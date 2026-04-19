@@ -34,7 +34,7 @@ async function startServer(): Promise<void> {
     response.json({
       app: "Closing Day API",
       status: "ok",
-      phase: 5
+      phase: 6
     });
   });
 
@@ -45,7 +45,7 @@ async function startServer(): Promise<void> {
   app.use("/api/client", clientRouter);
   app.use("/api/documents", documentsRouter);
   app.use("/api", eventsRouter);
-  app.use("/api/voice-bot", voiceBotRouter);
+  app.use("/api/agent/voice-bot", voiceBotRouter);
   app.use(errorHandler);
 
   const port = diagnostics.port;

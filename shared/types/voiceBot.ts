@@ -8,19 +8,43 @@ export interface BotScriptTurn {
   text: string;
 }
 
+export interface BotVoicePlayback {
+  audioBase64?: string;
+  mimeType: "audio/mpeg";
+  generatedBy: "elevenlabs" | "fallback";
+  transparency: AiTransparency;
+}
+
+export interface VoiceBotPrepBrief {
+  text: string;
+  generatedBy: GeneratedBy;
+  transparency: AiTransparency;
+}
+
 export interface VoiceBotSessionRecord {
   id: string;
   transactionId: string;
   clientAccountId: string;
   agentId: string;
+  clientName: string;
+  clientFirstName: string;
+  propertyAddress: string;
+  propertyCity: string;
+  propertyState: string;
+  propertyZip: string;
+  stageLabel: string;
   status: BotSessionStatus;
   topConcerns: string[];
   proposedSlots: string[];
   tone: BotTone;
   script: BotScriptTurn[];
+  responseOptions: string[];
+  canConfirmBooking: boolean;
+  currentBotTurn?: BotScriptTurn;
+  currentBotAudio?: BotVoicePlayback;
   bookedSlot?: string;
   clientNewQuestion?: string;
-  prepBrief?: string;
+  prepBrief?: VoiceBotPrepBrief;
   generatedBy: GeneratedBy;
   transparency: AiTransparency;
   createdAt: string;

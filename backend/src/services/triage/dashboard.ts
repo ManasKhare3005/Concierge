@@ -22,6 +22,19 @@ function parseTopConcerns(topConcerns: string): string[] {
   return [];
 }
 
+function parseProposedSlots(value: string): string[] {
+  try {
+    const parsed = JSON.parse(value) as unknown;
+    if (Array.isArray(parsed)) {
+      return parsed.filter((item): item is string => typeof item === "string").slice(0, 3);
+    }
+  } catch {
+    return [];
+  }
+
+  return [];
+}
+
 function trimToLength(value: string, maxLength: number): string {
   return value.length <= maxLength ? value : `${value.slice(0, maxLength - 3).trim()}...`;
 }
@@ -207,6 +220,11 @@ export async function buildAgentTriage(agentId: string): Promise<AgentTriageResp
       const bookedSession = transaction.botSessions.find(
         (session) => session.clientAccountId === clientRole.clientAccountId && session.status === "booked"
       );
+      const pendingSession = transaction.botSessions.find(
+        (session) =>
+          session.clientAccountId === clientRole.clientAccountId &&
+          (session.status === "pending" || session.status === "in_progress")
+      );
 
       const baseBucket = bucketLabelFromReadiness(latestReadiness?.bucket);
       const bucket: AgentTriageBucketKey = bookedSession ? "booked" : baseBucket;
@@ -271,7 +289,15 @@ export async function buildAgentTriage(agentId: string): Promise<AgentTriageResp
           propertyAddress: transaction.propertyAddress,
           topConcerns
         }),
-        ...(bookedSession?.bookedSlot ? { bookedSlot: bookedSession.bookedSlot.toISOString() } : {})
+        ...(bookedSession?.bookedSlot ? { bookedSlot: bookedSession.bookedSlot.toISOString() } : {}),
+        ...(pendingSession
+          ? {
+              pendingBotSessionId: pendingSession.id,
+              pendingBotTone: pendingSession.tone as NonNullable<AgentTriageCard["pendingBotTone"]>,
+              pendingBotConcerns: parseTopConcerns(pendingSession.topConcerns),
+              pendingBotProposedSlots: parseProposedSlots(pendingSession.proposedSlots)
+            }
+          : {})
       };
 
       grouped[bucket].push(card);

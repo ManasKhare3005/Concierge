@@ -3,10 +3,11 @@ import type { AgentActivityItem, AgentTriageCard, RealtimeEventPayloadMap } from
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
 import { BellRing, LogOut, RadioTower } from "lucide-react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 
 import { ActivityFeed } from "@/components/agent/ActivityFeed";
 import { AgentShell } from "@/components/agent/AgentShell";
+import { BotCallModal } from "@/components/agent/BotCallModal";
 import { RoiRibbon } from "@/components/agent/RoiRibbon";
 import { TriageBoard } from "@/components/agent/TriageBoard";
 import { Toast } from "@/components/shared/Toast";
@@ -14,6 +15,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAgentEventStream } from "@/hooks/useAgentEventStream";
+import { useInitiateBotCall } from "@/hooks/useBotCall";
 import { useTriage } from "@/hooks/useTriage";
 import { api } from "@/lib/api";
 import { useAgentAuthStore } from "@/store/agentAuthStore";
@@ -54,11 +56,14 @@ function dedupeActivity(items: AgentActivityItem[]): AgentActivityItem[] {
 }
 
 export function AgentTriagePage() {
+  const navigate = useNavigate();
   const token = useAgentAuthStore((state) => state.token);
   const logout = useAgentAuthStore((state) => state.logout);
   const triageQuery = useTriage(token);
   const agentEvents = useAgentEventStream(token);
+  const initiateBotCall = useInitiateBotCall(token);
   const [highlightedClientIds, setHighlightedClientIds] = useState<string[]>([]);
+  const [selectedBotCard, setSelectedBotCard] = useState<AgentTriageCard | null>(null);
   const [toastState, setToastState] = useState<{
     open: boolean;
     title: string;
@@ -149,6 +154,16 @@ export function AgentTriagePage() {
       });
     }
 
+    if (nextEvent.type === "bot:booked") {
+      const payload = nextEvent.payload as RealtimeEventPayloadMap["bot:booked"];
+      setToastState({
+        open: true,
+        title: `${clientCard?.clientFirstName ?? "Client"} booked`,
+        description: `Voice bot confirmed ${new Date(payload.bookedSlot).toLocaleString()}.`,
+        variant: "success"
+      });
+    }
+
     return () => {
       window.clearTimeout(timeout);
     };
@@ -199,13 +214,29 @@ export function AgentTriagePage() {
     }
   }
 
+  async function handleCallWithBotStart(payload: {
+    transactionId: string;
+    clientAccountId: string;
+    concerns: string[];
+    tone: "warm" | "brief" | "detailed";
+    proposedSlots: string[];
+  }) {
+    try {
+      const session = await initiateBotCall.mutateAsync(payload);
+      setSelectedBotCard(null);
+      navigate(`/agent/voice-bot/${session.id}`);
+    } catch (error) {
+      setToastState({
+        open: true,
+        title: "Could not start the bot call",
+        description: error instanceof Error ? error.message : "The simulated call session did not start.",
+        variant: "error"
+      });
+    }
+  }
+
   function handleCallWithBot(card: AgentTriageCard) {
-    setToastState({
-      open: true,
-      title: `Bot call prep ready for ${card.clientFirstName}`,
-      description: "The voice bot flow lands in Phase 6. This client is already pre-qualified in triage for a bot-driven follow-up.",
-      variant: "info"
-    });
+    setSelectedBotCard(card);
   }
 
   return (
@@ -267,7 +298,7 @@ export function AgentTriagePage() {
                 {
                   label: "Pending Bot Calls",
                   value: counts.pendingBotCalls,
-                  body: "Seeded voice-bot sessions already waiting for Phase 6."
+                  body: "Queued bot-assisted conversations waiting to be started."
                 }
               ].map((item) => (
                 <Card key={item.label}>
@@ -314,6 +345,17 @@ export function AgentTriagePage() {
         variant={toastState.variant}
         {...(toastState.description ? { description: toastState.description } : {})}
         onClose={() => setToastState((current) => ({ ...current, open: false }))}
+      />
+      <BotCallModal
+        open={selectedBotCard !== null}
+        card={selectedBotCard}
+        loading={initiateBotCall.isPending}
+        onOpenChange={(open) => {
+          if (!open) {
+            setSelectedBotCard(null);
+          }
+        }}
+        onStart={handleCallWithBotStart}
       />
     </>
   );
