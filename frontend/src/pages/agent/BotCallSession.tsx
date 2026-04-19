@@ -139,8 +139,11 @@ export function AgentBotCallSessionPage() {
 
   const session = sessionQuery.data;
   const voiceWhyTransparency = session.currentBotAudio?.transparency;
-  const showCustomResponse = !session.canConfirmBooking;
-  const confirmDisabled = !selectedSlot || confirmMutation.isPending;
+  const showBookedState = session.status === "booked";
+  const showClosedState = session.status === "declined" || session.status === "failed";
+  const showConfirmState = !showBookedState && !showClosedState && session.canConfirmBooking;
+  const showCustomResponse = !showBookedState && !showClosedState && !session.canConfirmBooking;
+  const confirmDisabled = !selectedSlot || confirmMutation.isPending || showBookedState || showClosedState;
 
   async function handleResponse(nextResponse: string) {
     try {
@@ -160,7 +163,7 @@ export function AgentBotCallSessionPage() {
   }
 
   async function handleConfirm() {
-    if (!selectedSlot) {
+    if (!selectedSlot || showBookedState || showClosedState) {
       return;
     }
 
@@ -204,7 +207,7 @@ export function AgentBotCallSessionPage() {
             <Card className="overflow-hidden bg-primary text-white">
               <CardHeader className="space-y-4">
                 <div className="flex flex-wrap items-center gap-3">
-                  <Badge className="border-white/20 bg-white/10 text-white">
+                  <Badge variant="glass">
                     <PhoneCall className="mr-1.5 h-3.5 w-3.5" />
                     Simulated call live
                   </Badge>
@@ -218,7 +221,7 @@ export function AgentBotCallSessionPage() {
                       {session.propertyAddress} is in {session.stageLabel.toLowerCase()}. Closing Day is narrowing the call so you only step in once the concern is clear and the meeting slot is ready.
                     </CardDescription>
                   </div>
-                  <Button asChild type="button" variant="outline" className="border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white">
+                  <Button asChild type="button" variant="glass" className="hover:text-white">
                     <Link to="/agent/triage">
                       <ArrowLeft className="mr-2 h-4 w-4" />
                       Back to Triage
@@ -271,7 +274,51 @@ export function AgentBotCallSessionPage() {
                   </CardContent>
                 </Card>
 
-                {showCustomResponse ? (
+                {showBookedState ? (
+                  <Card className="border-emerald-200 bg-emerald-50/70">
+                    <CardHeader>
+                      <CardTitle className="flex items-center gap-2 text-emerald-950">
+                        <CalendarCheck2 className="h-5 w-5" />
+                        Booking Confirmed
+                      </CardTitle>
+                      <CardDescription className="text-emerald-900/80">
+                        Closing Day already locked the meeting and generated the prep brief for the agent follow-up.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="rounded-[20px] border border-emerald-200 bg-white px-4 py-3 text-sm text-slate-700">
+                        {session.bookedSlot ? formatSlot(session.bookedSlot) : "Booked slot saved"}
+                      </div>
+                      {session.clientNewQuestion ? (
+                        <div className="rounded-[20px] border border-slate-200 bg-white p-4 text-sm text-slate-700">
+                          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-500">
+                            Final client note
+                          </p>
+                          <p className="leading-6">{session.clientNewQuestion}</p>
+                        </div>
+                      ) : null}
+                      <div className="flex justify-end">
+                        <Button asChild type="button" variant="accent">
+                          <Link to="/agent/triage">Back to Triage</Link>
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ) : showClosedState ? (
+                  <Card className="border-slate-200 bg-slate-50">
+                    <CardHeader>
+                      <CardTitle>Session Closed</CardTitle>
+                      <CardDescription>
+                        This bot session is no longer active. Head back to triage to decide the next agent follow-up.
+                      </CardDescription>
+                    </CardHeader>
+                    <CardContent className="flex justify-end">
+                      <Button asChild type="button" variant="outline">
+                        <Link to="/agent/triage">Back to Triage</Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
+                ) : showCustomResponse ? (
                   <Card>
                     <CardHeader>
                       <CardTitle>Advance the Call</CardTitle>
@@ -299,7 +346,7 @@ export function AgentBotCallSessionPage() {
                       </div>
                     </CardContent>
                   </Card>
-                ) : (
+                ) : showConfirmState ? (
                   <Card className="border-emerald-200 bg-emerald-50/70">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-emerald-950">
@@ -339,7 +386,7 @@ export function AgentBotCallSessionPage() {
                       </div>
                     </CardContent>
                   </Card>
-                )}
+                ) : null}
               </div>
             </section>
           </div>

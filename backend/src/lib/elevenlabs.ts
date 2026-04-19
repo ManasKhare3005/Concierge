@@ -31,6 +31,84 @@ export interface OutboundCallOptions {
   sources: string[];
 }
 
+function normalizeOutboundPhoneNumber(rawValue: string): string | undefined {
+  const trimmed = rawValue.trim();
+  if (!trimmed) {
+    return undefined;
+  }
+
+  if (/^\+[1-9]\d{9,14}$/.test(trimmed)) {
+    return trimmed;
+  }
+
+  const digitsOnly = trimmed.replace(/\D/g, "");
+  if (digitsOnly.length === 10) {
+    return `+1${digitsOnly}`;
+  }
+
+  if (digitsOnly.length === 11 && digitsOnly.startsWith("1")) {
+    return `+${digitsOnly}`;
+  }
+
+  return undefined;
+}
+
+function extractErrorDetail(error: unknown): { status?: string; message?: string } {
+  if (!axios.isAxiosError(error)) {
+    return {};
+  }
+
+  const responseData = error.response?.data;
+  if (!responseData || typeof responseData !== "object" || !("detail" in responseData)) {
+    return {};
+  }
+
+  const detail = responseData["detail"];
+  if (!detail || typeof detail !== "object") {
+    return {};
+  }
+
+  const status = "status" in detail ? String(detail["status"]) : undefined;
+  const message = "message" in detail ? String(detail["message"]) : undefined;
+
+  return {
+    ...(status ? { status } : {}),
+    ...(message ? { message } : {})
+  };
+}
+
+function formatOutboundCallError(error: unknown): string {
+  if (!axios.isAxiosError(error)) {
+    return "Closing Day could not start the live outbound call because the request failed before ElevenLabs returned a usable response.";
+  }
+
+  const status = error.response?.status;
+  const responseData = error.response?.data;
+  const detail = extractErrorDetail(error);
+  const responseMessage =
+    typeof responseData === "string"
+      ? responseData
+      : detail.message;
+
+  if (status === 401) {
+    if (detail.status === "missing_permissions" && detail.message) {
+      return `ElevenLabs rejected the outbound call because this API key is missing the required permission: ${detail.message} Update the key in ElevenLabs Developers > API Keys and enable the needed Conversational AI permissions, or create an unrestricted key for local testing.`;
+    }
+
+    return "ElevenLabs rejected the outbound call request with 401 Unauthorized. Verify that ELEVENLABS_API_KEY belongs to the same workspace as ELEVENLABS_AGENT_ID and ELEVENLABS_AGENT_PHONE_NUMBER_ID, and that the imported Twilio-backed number is enabled for outbound calls.";
+  }
+
+  if (status === 422) {
+    return `ElevenLabs accepted your credentials but rejected the outbound call payload. ${responseMessage ?? "Check the destination phone number format and the selected agent phone number configuration."}`;
+  }
+
+  if (status) {
+    return `ElevenLabs returned ${status} while starting the outbound call.${responseMessage ? ` ${responseMessage}` : ""}`;
+  }
+
+  return error.message;
+}
+
 export function getElevenLabsStatus(): ServiceStatus {
   if (!process.env.ELEVENLABS_API_KEY) {
     return {
@@ -44,8 +122,8 @@ export function getElevenLabsStatus(): ServiceStatus {
     name: "elevenlabs",
     state: "configured",
     detail: process.env.ELEVENLABS_AGENT_ID && process.env.ELEVENLABS_AGENT_PHONE_NUMBER_ID
-      ? `Configured for voice ${process.env.ELEVENLABS_VOICE_ID ?? "default"} and outbound calling.`
-      : `Configured for voice ${process.env.ELEVENLABS_VOICE_ID ?? "default"}. Outbound calling is not configured yet.`
+      ? `Configured from env for voice ${process.env.ELEVENLABS_VOICE_ID ?? "default"} and outbound calling. API-key permissions are not verified at startup.`
+      : `Configured from env for voice ${process.env.ELEVENLABS_VOICE_ID ?? "default"}. Outbound calling is not configured yet, and API-key permissions are not verified at startup.`
   };
 }
 
@@ -137,6 +215,21 @@ export async function initiateOutboundCall(
     };
   }
 
+  const normalizedNumber = normalizeOutboundPhoneNumber(options.toNumber);
+  if (!normalizedNumber) {
+    return {
+      success: false,
+      message:
+        "Closing Day could not start the live outbound call because the phone number is not in a valid outbound format. Use a full international number or a 10-digit U.S. number.",
+      generatedBy: "fallback",
+      transparency: buildTransparency(
+        "fallback",
+        options.sources,
+        "The phone number could not be normalized into the outbound format ElevenLabs expects."
+      )
+    };
+  }
+
   try {
     const response = await axios.post<{
       success: boolean;
@@ -148,7 +241,7 @@ export async function initiateOutboundCall(
       {
         agent_id: process.env.ELEVENLABS_AGENT_ID,
         agent_phone_number_id: process.env.ELEVENLABS_AGENT_PHONE_NUMBER_ID,
-        to_number: options.toNumber
+        to_number: normalizedNumber
       },
       {
         headers: {
@@ -173,13 +266,14 @@ export async function initiateOutboundCall(
     };
   } catch (error) {
     logger.error("ElevenLabs outbound call failed", {
-      error: error instanceof Error ? error.message : error
+      error: error instanceof Error ? error.message : error,
+      status: axios.isAxiosError(error) ? error.response?.status : undefined,
+      responseData: axios.isAxiosError(error) ? error.response?.data : undefined
     });
 
     return {
       success: false,
-      message:
-        "Closing Day could not start the live outbound call. Check the ElevenLabs agent, phone number import, and outbound-call permissions.",
+      message: formatOutboundCallError(error),
       generatedBy: "fallback",
       transparency: buildTransparency(
         "fallback",

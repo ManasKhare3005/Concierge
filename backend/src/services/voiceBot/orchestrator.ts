@@ -6,7 +6,7 @@ import type {
 import type { BotCallSession, Transaction } from "@prisma/client";
 
 import { prisma } from "../../lib/prisma";
-import { synthesizeSpeech } from "../../lib/elevenlabs";
+import { initiateOutboundCall, synthesizeSpeech, type OutboundCallResult } from "../../lib/elevenlabs";
 import { writePrepBrief } from "../ai/prepBriefWriter";
 import { buildVoiceBotScript } from "../ai/voiceBotScripter";
 import { emitRealtimeEvent } from "../sync/realtime";
@@ -41,6 +41,7 @@ interface VoiceBotTransactionContext extends Transaction {
       id: string;
       firstName: string;
       lastName: string;
+      phone: string | null;
       preferredLanguage: string;
     };
   }>;
@@ -96,6 +97,24 @@ export interface ConfirmVoiceBotInput {
   clientNewQuestion?: string;
 }
 
+export interface AutomatedVoiceFollowUpInput {
+  agentId: string;
+  transactionId: string;
+  clientAccountId: string;
+  severity: number;
+  triggeringQuestion: string;
+  topConcerns: string[];
+  agentPrepNote: string;
+  recommendedAgentAction: string;
+}
+
+export interface AutomatedVoiceFollowUpResult {
+  sessionId: string;
+  status: VoiceBotSessionRecord["status"];
+  createdNewSession: boolean;
+  callResult?: OutboundCallResult;
+}
+
 function trimToLength(value: string, maxLength: number): string {
   return value.length <= maxLength ? value : `${value.slice(0, maxLength - 3).trim()}...`;
 }
@@ -139,6 +158,25 @@ function resolveConcerns(transaction: VoiceBotTransactionContext, concerns?: str
   }
 
   return transaction.questions.slice(0, 3).map((question) => trimToLength(question.question, 120));
+}
+
+function buildFallbackCallResult(message: string, sources: string[]): OutboundCallResult {
+  return {
+    success: false,
+    message,
+    generatedBy: "fallback",
+    transparency: {
+      sources,
+      note: "Fallback response: Closing Day staged the follow-up session, but no live outbound call was started."
+    }
+  };
+}
+
+function buildAutomatedConcerns(triggeringQuestion: string, topConcerns: string[]): string[] {
+  return uniqueStrings([
+    ...topConcerns,
+    trimToLength(triggeringQuestion.replace(/\s+/g, " ").trim(), 120)
+  ]).slice(0, 3);
 }
 
 async function loadClientSummary(clientAccountId: string): Promise<VoiceBotSessionWithContext["clientAccount"]> {
@@ -196,6 +234,7 @@ async function getTransactionContext(
               id: true,
               firstName: true,
               lastName: true,
+              phone: true,
               preferredLanguage: true
             }
           }
@@ -278,6 +317,7 @@ async function hydrateVoiceBotSession(
   const storedScript = parseStoredVoiceBotScript(session);
   const topConcerns = parseJsonStringArray(session.topConcerns);
   const proposedSlots = parseJsonStringArray(session.proposedSlots);
+  const isOpenSession = session.status === "pending" || session.status === "in_progress";
   const presentation = getSimulatedCallPresentation({
     clientFirstName: session.clientAccount.firstName,
     topConcerns,
@@ -286,7 +326,7 @@ async function hydrateVoiceBotSession(
     transcript: storedScript.turns
   });
 
-  const currentBotAudio = presentation.currentBotTurn
+  const currentBotAudio = isOpenSession && presentation.currentBotTurn
     ? await synthesizeSpeech({
         text: presentation.currentBotTurn.text,
         sources: [
@@ -316,8 +356,8 @@ async function hydrateVoiceBotSession(
     proposedSlots,
     tone: session.tone as BotTone,
     script: storedScript.turns,
-    responseOptions: presentation.responseOptions,
-    canConfirmBooking: presentation.canConfirmBooking,
+    responseOptions: isOpenSession ? presentation.responseOptions : [],
+    canConfirmBooking: isOpenSession && presentation.canConfirmBooking,
     ...(presentation.currentBotTurn ? { currentBotTurn: presentation.currentBotTurn } : {}),
     ...(currentBotAudio ? { currentBotAudio } : {}),
     ...(session.bookedSlot ? { bookedSlot: session.bookedSlot.toISOString() } : {}),
@@ -455,6 +495,220 @@ export async function initiateVoiceBotSession(
       );
 
   return hydrateVoiceBotSession(session);
+}
+
+export async function initiateAutomatedVoiceFollowUp(
+  input: AutomatedVoiceFollowUpInput
+): Promise<AutomatedVoiceFollowUpResult> {
+  if (input.severity < 3) {
+    throw new Error("Automated voice follow-up only runs for severity 3 or higher.");
+  }
+
+  const transaction = await getTransactionContext(input.agentId, input.transactionId, input.clientAccountId);
+  const client = transaction.clientRoles[0]?.clientAccount;
+  if (!client) {
+    throw new Error("Client was not found on this transaction.");
+  }
+
+  const concerns = buildAutomatedConcerns(input.triggeringQuestion, input.topConcerns);
+  const proposedSlots = buildDefaultSlots();
+  const tone: BotTone = "warm";
+
+  const [scriptResult, prepBriefResult] = await Promise.all([
+    buildVoiceBotScript({
+      agentFirstName: transaction.agent.firstName,
+      clientFirstName: client.firstName,
+      propertyAddress: transaction.propertyAddress,
+      stageLabel: transaction.stageLabel,
+      topConcerns: concerns,
+      tone,
+      proposedSlots
+    }),
+    writePrepBrief({
+      agentName: `${transaction.agent.firstName} ${transaction.agent.lastName}`,
+      clientName: `${client.firstName} ${client.lastName}`,
+      propertyAddress: transaction.propertyAddress,
+      stageLabel: transaction.stageLabel,
+      topConcerns: concerns,
+      conversationTranscript: [
+        `client: ${input.triggeringQuestion}`,
+        `system: ${input.agentPrepNote}`,
+        `system: ${input.recommendedAgentAction}`
+      ],
+      recentQuestions: [
+        input.triggeringQuestion,
+        ...transaction.questions.map((question) => question.question)
+      ].slice(0, 4),
+      documentContext: transaction.documents.map((document) =>
+        document.summaryTlDr ? `${document.title}: ${document.summaryTlDr}` : document.title
+      )
+    })
+  ]);
+
+  const storedScript: StoredVoiceBotScript = {
+    plan: scriptResult.plan,
+    turns: buildInitialTranscript(scriptResult.plan),
+    generatedBy: scriptResult.generatedBy,
+    transparency: scriptResult.transparency
+  };
+
+  const prepBrief = {
+    text: prepBriefResult.text,
+    generatedBy: prepBriefResult.generatedBy,
+    transparency: prepBriefResult.transparency
+  };
+
+  const topConcerns = JSON.stringify(concerns);
+  const serializedSlots = JSON.stringify(proposedSlots);
+  const clientQuestion = trimToLength(input.triggeringQuestion, 280);
+
+  const existingSession = await prisma.botCallSession.findFirst({
+    where: {
+      agentId: input.agentId,
+      transactionId: input.transactionId,
+      clientAccountId: input.clientAccountId,
+      status: {
+        in: ["pending", "in_progress"]
+      }
+    },
+    orderBy: {
+      createdAt: "desc"
+    },
+    include: {
+      transaction: {
+        select: {
+          propertyAddress: true,
+          propertyCity: true,
+          propertyState: true,
+          propertyZip: true,
+          stageLabel: true
+        }
+      }
+    }
+  });
+
+  if (existingSession) {
+    await saveSessionScript(
+      existingSession.id,
+      storedScript,
+      {
+        status: existingSession.status,
+        topConcerns,
+        proposedSlots: serializedSlots,
+        tone,
+        clientNewQuestion: clientQuestion
+      }
+    );
+
+    await prisma.botCallSession.update({
+      where: {
+        id: existingSession.id
+      },
+      data: {
+        prepBrief: serializeStoredPrepBrief(prepBrief)
+      }
+    });
+
+    await prisma.notification.create({
+      data: {
+        agentId: input.agentId,
+        type: "bot_followup_started",
+        title: `${client.firstName} triggered another bot follow-up signal`,
+        body: trimToLength(
+          `Closing Day refreshed the existing follow-up session after a severity ${input.severity} question. Review the latest concern before reaching out.`,
+          220
+        ),
+        relatedId: existingSession.id
+      }
+    });
+
+    return {
+      sessionId: existingSession.id,
+      status: existingSession.status as VoiceBotSessionRecord["status"],
+      createdNewSession: false
+    };
+  }
+
+  const createdSession = await withSessionContext(
+    await prisma.botCallSession.create({
+      data: {
+        transactionId: input.transactionId,
+        clientAccountId: input.clientAccountId,
+        agentId: input.agentId,
+        status: "pending",
+        topConcerns,
+        proposedSlots: serializedSlots,
+        tone,
+        script: serializeStoredVoiceBotScript(storedScript),
+        clientNewQuestion: clientQuestion,
+        prepBrief: serializeStoredPrepBrief(prepBrief)
+      },
+      include: {
+        transaction: {
+          select: {
+            propertyAddress: true,
+            propertyCity: true,
+            propertyState: true,
+            propertyZip: true,
+            stageLabel: true
+          }
+        }
+      }
+    })
+  );
+
+  const callSources = [
+    `session:${createdSession.id}`,
+    `transaction:${input.transactionId}`,
+    `client:${client.id}`,
+    `severity:${input.severity}`
+  ];
+
+  const callResult = client.phone
+    ? await initiateOutboundCall({
+        toNumber: client.phone,
+        sources: callSources
+      })
+    : buildFallbackCallResult(
+        "Closing Day staged the voice follow-up, but the client does not have a phone number saved on their profile.",
+        callSources
+      );
+
+  let sessionStatus: VoiceBotSessionRecord["status"] = "pending";
+  if (callResult.success) {
+    await prisma.botCallSession.update({
+      where: {
+        id: createdSession.id
+      },
+      data: {
+        status: "in_progress"
+      }
+    });
+
+    sessionStatus = "in_progress";
+  }
+
+  await prisma.notification.create({
+    data: {
+      agentId: input.agentId,
+      type: "bot_followup_started",
+      title: `${client.firstName} triggered an automatic bot follow-up`,
+      body: trimToLength(
+        callResult.success
+          ? `Closing Day started a live bot follow-up after a severity ${input.severity} question. Review the prep brief before you reassure the client about ${transaction.propertyAddress}.`
+          : `Closing Day staged a bot follow-up after a severity ${input.severity} question, but the live call did not start. ${callResult.message}`,
+        220
+      ),
+      relatedId: createdSession.id
+    }
+  });
+
+  return {
+    sessionId: createdSession.id,
+    status: sessionStatus,
+    createdNewSession: true,
+    callResult
+  };
 }
 
 export async function getVoiceBotSession(
