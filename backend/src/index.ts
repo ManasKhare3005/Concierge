@@ -34,7 +34,7 @@ async function startServer(): Promise<void> {
     response.json({
       app: "Closing Day API",
       status: "ok",
-      phase: 3
+      phase: 4
     });
   });
 

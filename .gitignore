@@ -18,3 +18,7 @@ frontend/.vite/
 dev.log
 dev.err
 dev.pid
+backend-dev.log
+backend-dev.pid
+frontend-dev.log
+frontend-dev.pid

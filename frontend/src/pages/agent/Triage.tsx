@@ -46,6 +46,8 @@ export function AgentTriagePage() {
     queryKey: ["agent", "me", token],
     enabled: Boolean(token),
     retry: false,
+    refetchInterval: token ? 2000 : false,
+    refetchIntervalInBackground: true,
     queryFn: async () => {
       const response = await api.get<AgentMeResponse>("/api/auth/agent/me", {
         headers: {
@@ -92,7 +94,7 @@ export function AgentTriagePage() {
           <Card className="overflow-hidden bg-primary text-white">
             <CardHeader className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
               <div className="space-y-3">
-                <Badge className="w-fit border-white/20 bg-white/10 text-white">Phase 3 documents live</Badge>
+                <Badge className="w-fit border-white/20 bg-white/10 text-white">Phase 4 client signals live</Badge>
                 <CardTitle className="text-4xl text-white">
                   Welcome back, {agent.firstName}. Your document workspace is ready.
                 </CardTitle>

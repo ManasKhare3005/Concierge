@@ -2,7 +2,9 @@ import { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { Link, Navigate, useParams } from "react-router-dom";
 
+import { CheckInBox } from "@/components/client/CheckInBox";
 import { DocumentViewer } from "@/components/client/DocumentViewer";
+import { QuestionChat } from "@/components/client/QuestionChat";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -44,7 +46,7 @@ export function ClientTransactionDocumentsPage() {
     return <Navigate to="/client/portfolio" replace />;
   }
 
-  const { transaction, documents } = documentsQuery.data;
+  const { transaction, documents, questions, latestSentiment } = documentsQuery.data;
   const selectedDocument =
     documents.find((document) => document.id === selectedDocumentId) ?? documents[0] ?? null;
 
@@ -95,6 +97,21 @@ export function ClientTransactionDocumentsPage() {
           </Card>
 
           <DocumentViewer document={selectedDocument} token={token} />
+        </div>
+
+        <div className="grid gap-6 xl:grid-cols-[1.2fr_0.8fr]">
+          <QuestionChat
+            document={selectedDocument}
+            questions={questions}
+            token={token}
+            transactionId={transactionId}
+          />
+          <CheckInBox
+            token={token}
+            transactionId={transactionId}
+            {...(latestSentiment ? { latestSentiment } : {})}
+            {...(transaction.readiness ? { readiness: transaction.readiness } : {})}
+          />
         </div>
       </div>
     </motion.main>
