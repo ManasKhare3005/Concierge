@@ -47,8 +47,6 @@ export function useAgentTransactions(token: string | null) {
   return useQuery({
     queryKey: ["agent", "transactions", token],
     enabled: Boolean(token),
-    refetchInterval: token ? 2000 : false,
-    refetchIntervalInBackground: true,
     queryFn: async () => {
       const response = await api.get<AgentTransactionsResponse>("/api/agent/transactions", {
         headers: {

@@ -8,6 +8,7 @@ import { QuestionChat } from "@/components/client/QuestionChat";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useClientEventStream } from "@/hooks/useClientEventStream";
 import { useClientDocuments } from "@/hooks/useClientDocuments";
 import { useClientAuthStore } from "@/store/clientAuthStore";
 
@@ -17,6 +18,7 @@ export function ClientTransactionDocumentsPage() {
   const logout = useClientAuthStore((state) => state.logout);
   const documentsQuery = useClientDocuments(transactionId, token);
   const [selectedDocumentId, setSelectedDocumentId] = useState<string | null>(null);
+  useClientEventStream(token);
 
   useEffect(() => {
     if (documentsQuery.isError) {

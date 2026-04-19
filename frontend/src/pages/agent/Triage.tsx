@@ -1,24 +1,22 @@
-import { useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
+import type { AgentActivityItem, AgentTriageCard, RealtimeEventPayloadMap } from "@shared";
 import { useQuery } from "@tanstack/react-query";
 import { motion } from "framer-motion";
-import { BellRing, BriefcaseBusiness, FileStack, LogOut, RadioTower, Users } from "lucide-react";
-import { Link, Navigate } from "react-router-dom";
+import { BellRing, LogOut, RadioTower } from "lucide-react";
+import { Navigate } from "react-router-dom";
 
+import { ActivityFeed } from "@/components/agent/ActivityFeed";
 import { AgentShell } from "@/components/agent/AgentShell";
+import { RoiRibbon } from "@/components/agent/RoiRibbon";
+import { TriageBoard } from "@/components/agent/TriageBoard";
+import { Toast } from "@/components/shared/Toast";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { useAgentTransactions } from "@/hooks/useAgentTransactionDocuments";
+import { useAgentEventStream } from "@/hooks/useAgentEventStream";
+import { useTriage } from "@/hooks/useTriage";
 import { api } from "@/lib/api";
 import { useAgentAuthStore } from "@/store/agentAuthStore";
-
-interface AgentNotification {
-  id: string;
-  type: string;
-  title: string;
-  body: string;
-  createdAt: string;
-}
 
 interface AgentMeResponse {
   agent: {
@@ -34,20 +32,48 @@ interface AgentMeResponse {
     activeClients: number;
     pendingBotCalls: number;
   };
-  notifications: AgentNotification[];
+}
+
+function dedupeActivity(items: AgentActivityItem[]): AgentActivityItem[] {
+  const seen = new Set<string>();
+  const deduped: AgentActivityItem[] = [];
+
+  for (const item of items) {
+    if (seen.has(item.id)) {
+      continue;
+    }
+
+    seen.add(item.id);
+    deduped.push(item);
+    if (deduped.length === 20) {
+      break;
+    }
+  }
+
+  return deduped;
 }
 
 export function AgentTriagePage() {
   const token = useAgentAuthStore((state) => state.token);
   const logout = useAgentAuthStore((state) => state.logout);
-  const transactionsQuery = useAgentTransactions(token);
+  const triageQuery = useTriage(token);
+  const agentEvents = useAgentEventStream(token);
+  const [highlightedClientIds, setHighlightedClientIds] = useState<string[]>([]);
+  const [toastState, setToastState] = useState<{
+    open: boolean;
+    title: string;
+    description?: string;
+    variant: "info" | "success" | "error";
+  }>({
+    open: false,
+    title: "",
+    variant: "info"
+  });
 
   const agentQuery = useQuery({
     queryKey: ["agent", "me", token],
     enabled: Boolean(token),
     retry: false,
-    refetchInterval: token ? 2000 : false,
-    refetchIntervalInBackground: true,
     queryFn: async () => {
       const response = await api.get<AgentMeResponse>("/api/auth/agent/me", {
         headers: {
@@ -64,150 +90,231 @@ export function AgentTriagePage() {
     }
   }, [agentQuery.isError, logout]);
 
+  const allCards = useMemo(() => {
+    if (!triageQuery.data) {
+      return [];
+    }
+
+    return [
+      ...triageQuery.data.grouped.needs_full_attention,
+      ...triageQuery.data.grouped.needs_light_touch,
+      ...triageQuery.data.grouped.clear,
+      ...triageQuery.data.grouped.booked
+    ];
+  }, [triageQuery.data]);
+
+  useEffect(() => {
+    const nextEvent = agentEvents.latestEvent;
+    if (!nextEvent || !("clientAccountId" in nextEvent.payload)) {
+      return;
+    }
+
+    const clientAccountId = nextEvent.payload.clientAccountId;
+    setHighlightedClientIds((current) => Array.from(new Set([clientAccountId, ...current])));
+
+    const timeout = window.setTimeout(() => {
+      setHighlightedClientIds((current) => current.filter((id) => id !== clientAccountId));
+    }, 1_500);
+
+    const clientCard = allCards.find((card) => card.clientAccountId === clientAccountId);
+    if (nextEvent.type === "client:question") {
+      const payload = nextEvent.payload as RealtimeEventPayloadMap["client:question"];
+      const severity = Number(payload.classification.split(":")[1] ?? "2");
+      if (severity >= 4 || payload.newReadiness?.bucket === "needs_full_attention") {
+        setToastState({
+          open: true,
+          title: `${clientCard?.clientFirstName ?? "Client"} needs attention`,
+          description: payload.question,
+          variant: "error"
+        });
+      }
+    }
+
+    if (
+      nextEvent.type === "client:sentiment" &&
+      (() => {
+        const payload = nextEvent.payload as RealtimeEventPayloadMap["client:sentiment"];
+        return (
+          payload.sentiment.agentAlertNeeded ||
+          ["anxious", "frustrated", "overwhelmed"].includes(payload.sentiment.sentiment)
+        );
+      })()
+    ) {
+      const payload = nextEvent.payload as RealtimeEventPayloadMap["client:sentiment"];
+      setToastState({
+        open: true,
+        title: `${clientCard?.clientFirstName ?? "Client"} sentiment changed`,
+        description: payload.sentiment.alertReason,
+        variant: "error"
+      });
+    }
+
+    return () => {
+      window.clearTimeout(timeout);
+    };
+  }, [agentEvents.latestEvent, allCards]);
+
   if (!token) {
     return <Navigate to="/agent/login" replace />;
   }
 
-  if (agentQuery.isLoading || transactionsQuery.isLoading) {
+  if (agentQuery.isLoading || triageQuery.isLoading) {
     return (
       <AgentShell>
         <div className="mx-auto max-w-5xl">
           <Card>
-            <CardContent className="p-8 text-sm text-slate-600">Loading the seeded agent workspace...</CardContent>
+            <CardContent className="p-8 text-sm text-slate-600">Loading the live triage board...</CardContent>
           </Card>
         </div>
       </AgentShell>
     );
   }
 
-  if (agentQuery.isError || transactionsQuery.isError || !agentQuery.data) {
+  if (agentQuery.isError || triageQuery.isError || !agentQuery.data || !triageQuery.data) {
     return <Navigate to="/agent/login" replace />;
   }
 
-  const { agent, counts, notifications } = agentQuery.data;
-  const transactions = transactionsQuery.data?.transactions ?? [];
+  const { agent, counts } = agentQuery.data;
+  const combinedActivity = dedupeActivity([
+    ...agentEvents.activityItems,
+    ...triageQuery.data.recentActivity
+  ]);
+
+  async function handleDraftText(card: AgentTriageCard) {
+    try {
+      await navigator.clipboard.writeText(card.draftText);
+      setToastState({
+        open: true,
+        title: `Draft copied for ${card.clientFirstName}`,
+        description: "The suggested follow-up text is now on your clipboard.",
+        variant: "success"
+      });
+    } catch {
+      setToastState({
+        open: true,
+        title: "Could not copy the draft",
+        description: card.draftText,
+        variant: "info"
+      });
+    }
+  }
+
+  function handleCallWithBot(card: AgentTriageCard) {
+    setToastState({
+      open: true,
+      title: `Bot call prep ready for ${card.clientFirstName}`,
+      description: "The voice bot flow lands in Phase 6. This client is already pre-qualified in triage for a bot-driven follow-up.",
+      variant: "info"
+    });
+  }
 
   return (
-    <motion.main initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
-      <AgentShell>
-        <div className="mx-auto max-w-6xl space-y-6">
-          <Card className="overflow-hidden bg-primary text-white">
-            <CardHeader className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
-              <div className="space-y-3">
-                <Badge className="w-fit border-white/20 bg-white/10 text-white">Phase 4 client signals live</Badge>
-                <CardTitle className="text-4xl text-white">
-                  Welcome back, {agent.firstName}. Your document workspace is ready.
-                </CardTitle>
-                <CardDescription className="max-w-2xl text-base text-teal-50/90">
-                  Logged in as {agent.email} for {agent.brokerage ?? "Closing Day demo brokerage"}.
-                </CardDescription>
-              </div>
-              <Button
-                variant="outline"
-                className="border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white"
-                onClick={logout}
-              >
-                <LogOut className="mr-2 h-4 w-4" />
-                Log Out
-              </Button>
-            </CardHeader>
-          </Card>
-
-          <section className="grid gap-4 md:grid-cols-3">
-            {[
-              {
-                icon: BriefcaseBusiness,
-                title: "Active Transactions",
-                value: counts.activeTransactions,
-                body: "Seeded transactions currently in motion for the document-pipeline demo."
-              },
-              {
-                icon: Users,
-                title: "Active Clients",
-                value: counts.activeClients,
-                body: "Clients tied to those live transactions, including co-buyers."
-              },
-              {
-                icon: RadioTower,
-                title: "Pending Bot Calls",
-                value: counts.pendingBotCalls,
-                body: "Sarah already has a pending bot session ready for later phases."
-              }
-            ].map((item) => (
-              <Card key={item.title}>
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2 text-lg">
-                    <item.icon className="h-5 w-5 text-primary" />
-                    {item.title}
+    <>
+      <motion.main initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
+        <AgentShell>
+          <div className="mx-auto max-w-[92rem] space-y-6">
+            <Card className="overflow-hidden bg-primary text-white">
+              <CardHeader className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-3">
+                    <Badge className="w-fit border-white/20 bg-white/10 text-white">Phase 5 realtime triage live</Badge>
+                    <Badge className="w-fit border-white/20 bg-white/10 text-white">
+                      <RadioTower className="mr-1.5 h-3.5 w-3.5" />
+                      {agentEvents.connectionState === "open"
+                        ? "Realtime connected"
+                        : agentEvents.connectionState === "reconnecting"
+                          ? "Realtime reconnecting"
+                          : "Realtime starting"}
+                    </Badge>
+                  </div>
+                  <CardTitle className="text-4xl text-white">
+                    {agent.firstName}, this is the pile that actually needs your time.
                   </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-2">
-                  <p className="text-4xl font-semibold text-ink">{item.value}</p>
-                  <p className="text-sm leading-6 text-slate-600">{item.body}</p>
-                </CardContent>
-              </Card>
-            ))}
-          </section>
-
-          <div className="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-2xl">
-                  <BellRing className="h-5 w-5 text-primary" />
-                  Seeded Activity Feed
-                </CardTitle>
-                <CardDescription>
-                  These notifications come from the seeded questions, document activity, and Sarah&apos;s high-attention state.
-                </CardDescription>
+                  <CardDescription className="max-w-3xl text-base text-teal-50/90">
+                    Live client questions and emotional signals now move the board as they happen, so you can protect deals without spending your day digging through every file.
+                  </CardDescription>
+                </div>
+                <Button
+                  variant="outline"
+                  className="border-white/20 bg-white/10 text-white hover:bg-white/15 hover:text-white"
+                  onClick={logout}
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  Log Out
+                </Button>
               </CardHeader>
-              <CardContent className="space-y-3">
-                {notifications.map((notification) => (
-                  <div key={notification.id} className="rounded-2xl border border-slate-200 bg-slate-50 p-4">
-                    <p className="text-sm font-semibold text-slate-900">{notification.title}</p>
-                    <p className="mt-1 text-sm text-slate-600">{notification.body}</p>
-                    <p className="mt-2 text-xs font-mono text-slate-500">
-                      {new Date(notification.createdAt).toLocaleString()}
-                    </p>
-                  </div>
-                ))}
-              </CardContent>
             </Card>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-2xl">Document Workspaces</CardTitle>
-                <CardDescription>
-                  Each active transaction now has a dedicated document workspace for upload, preview, and override.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-3 text-sm text-slate-600">
-                {transactions.map((transaction) => (
-                  <div key={transaction.id} className="rounded-2xl border border-slate-200 bg-white p-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <p className="font-semibold text-slate-900">{transaction.propertyAddress}</p>
-                        <p className="mt-1 text-sm text-slate-500">
-                          {transaction.stageLabel} | {transaction.documentCount} document{transaction.documentCount === 1 ? "" : "s"}
-                        </p>
-                      </div>
-                      <Button asChild variant="outline">
-                        <Link to={`/agent/transactions/${transaction.id}/documents`}>
-                          <FileStack className="mr-2 h-4 w-4" />
-                          Manage
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </CardContent>
-            </Card>
+            <RoiRibbon roi={triageQuery.data.roi} />
+
+            <section className="grid gap-4 md:grid-cols-4">
+              {[
+                {
+                  label: "Active Clients",
+                  value: triageQuery.data.summary.activeClients,
+                  body: "Clients currently being triaged in this deployment."
+                },
+                {
+                  label: "Needs Attention",
+                  value: triageQuery.data.summary.needsFullAttention,
+                  body: "People whose latest signals justify direct agent time."
+                },
+                {
+                  label: "Low-Touch Safe",
+                  value: triageQuery.data.summary.clear + triageQuery.data.summary.needsLightTouch,
+                  body: "Clients Closing Day can keep moving with lighter intervention."
+                },
+                {
+                  label: "Pending Bot Calls",
+                  value: counts.pendingBotCalls,
+                  body: "Seeded voice-bot sessions already waiting for Phase 6."
+                }
+              ].map((item) => (
+                <Card key={item.label}>
+                  <CardHeader>
+                    <CardTitle className="text-lg">{item.label}</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <p className="text-4xl font-semibold text-ink">{item.value}</p>
+                    <p className="text-sm leading-6 text-slate-600">{item.body}</p>
+                  </CardContent>
+                </Card>
+              ))}
+            </section>
+
+            <TriageBoard
+              grouped={triageQuery.data.grouped}
+              highlightedClientIds={highlightedClientIds}
+              onCallWithBot={handleCallWithBot}
+              onDraftText={handleDraftText}
+            />
+
+            <ActivityFeed
+              items={combinedActivity}
+              {...(agentEvents.activityItems[0]?.id ? { latestLiveActivityId: agentEvents.activityItems[0]?.id } : {})}
+            />
+
+            <div className="rounded-[28px] border border-slate-200 bg-white/85 p-5">
+              <div className="flex items-center gap-2">
+                <BellRing className="h-4 w-4 text-primary" />
+                <p className="text-sm font-semibold uppercase tracking-[0.16em] text-slate-700">Why this matters</p>
+              </div>
+              <p className="mt-3 text-sm leading-7 text-slate-600">
+                The goal is not to make every client feel the same. It is to protect the deal by knowing exactly who is calm,
+                who needs a nudge, and who is quietly slipping toward a bad decision.
+              </p>
+            </div>
           </div>
+        </AgentShell>
+      </motion.main>
 
-          <Button asChild variant="outline">
-            <Link to="/">Back to system status</Link>
-          </Button>
-        </div>
-      </AgentShell>
-    </motion.main>
+      <Toast
+        open={toastState.open}
+        title={toastState.title}
+        variant={toastState.variant}
+        {...(toastState.description ? { description: toastState.description } : {})}
+        onClose={() => setToastState((current) => ({ ...current, open: false }))}
+      />
+    </>
   );
 }

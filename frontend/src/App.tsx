@@ -1,6 +1,7 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 
 import { AgentLoginPage } from "@/pages/agent/AgentLogin";
+import { AgentSettingsPage } from "@/pages/agent/Settings";
 import { AgentTransactionDocumentsPage } from "@/pages/agent/TransactionDocuments";
 import { AgentTriagePage } from "@/pages/agent/Triage";
 import { ClientLoginPage } from "@/pages/client/ClientLogin";
@@ -15,6 +16,7 @@ export default function App() {
         <Route path="/" element={<LandingPage />} />
         <Route path="/agent/login" element={<AgentLoginPage />} />
         <Route path="/agent/triage" element={<AgentTriagePage />} />
+        <Route path="/agent/settings" element={<AgentSettingsPage />} />
         <Route path="/agent/transactions/:transactionId/documents" element={<AgentTransactionDocumentsPage />} />
         <Route path="/client/login" element={<ClientLoginPage />} />
         <Route path="/client/portfolio" element={<ClientPortfolioPage />} />

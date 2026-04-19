@@ -61,12 +61,12 @@ export function AgentLoginPage() {
                 Agent workspace
               </CardTitle>
               <CardDescription className="text-base text-teal-50/90">
-                Phase 2 is live now. Sign in with the seeded demo account and land directly in the triage shell.
+                Phase 5 is live now. Sign in with the seeded demo account and land directly in the realtime triage board.
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4 text-sm text-teal-50/90">
               <p>Seeded login: james@closingday.demo / demo123</p>
-              <p>The dashboard is still intentionally lightweight in this phase, but the data behind it is real and seeded.</p>
+              <p>The seeded data, live triage buckets, and realtime activity stream are all connected to the local SQLite demo.</p>
             </CardContent>
           </Card>
 

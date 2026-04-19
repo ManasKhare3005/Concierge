@@ -8,7 +8,7 @@ router.get("/health", (_request, response) => {
   response.json({
     status: "ok",
     app: "Closing Day API",
-    phase: 2,
+    phase: 5,
     timestamp: new Date().toISOString(),
     diagnostics: getStartupDiagnostics()
   });

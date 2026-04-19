@@ -8,6 +8,7 @@ import { ClientShell } from "@/components/client/ClientShell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useClientEventStream } from "@/hooks/useClientEventStream";
 import { api } from "@/lib/api";
 import { useClientAuthStore } from "@/store/clientAuthStore";
 
@@ -46,6 +47,7 @@ interface PortfolioResponse {
 export function ClientPortfolioPage() {
   const token = useClientAuthStore((state) => state.token);
   const logout = useClientAuthStore((state) => state.logout);
+  useClientEventStream(token);
 
   const clientQuery = useQuery({
     queryKey: ["client", "me", token],
@@ -149,7 +151,7 @@ export function ClientPortfolioPage() {
           {saveProgressSuggested ? (
             <Card className="border border-amber-200 bg-amber-50/90">
               <CardContent className="p-5 text-sm text-amber-900">
-                You came in through a magic link. Phase 2 already supports saving a password through
+                You came in through a magic link. Closing Day already supports saving a password through
                 `POST /api/auth/client/set-password`, and the polished prompt will land later in the flow.
               </CardContent>
             </Card>

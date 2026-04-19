@@ -34,7 +34,7 @@ async function startServer(): Promise<void> {
     response.json({
       app: "Closing Day API",
       status: "ok",
-      phase: 4
+      phase: 5
     });
   });
 
@@ -44,7 +44,7 @@ async function startServer(): Promise<void> {
   app.use("/api/agent/documents", documentsRouter);
   app.use("/api/client", clientRouter);
   app.use("/api/documents", documentsRouter);
-  app.use("/api/events", eventsRouter);
+  app.use("/api", eventsRouter);
   app.use("/api/voice-bot", voiceBotRouter);
   app.use(errorHandler);
 

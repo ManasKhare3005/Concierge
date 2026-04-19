@@ -3,11 +3,19 @@ import { Router } from "express";
 import { prisma } from "../lib/prisma";
 import { requireAgentAuth } from "../middleware/agentAuth";
 import { mapDocumentRecord } from "../services/documents/repository";
+import { buildAgentTriage } from "../services/triage/dashboard";
 
 const router = Router();
 
-router.get("/triage", (_request, response) => {
-  response.status(501).json({ message: "Phase 5 will implement the triage API." });
+router.get("/triage", requireAgentAuth, async (request, response) => {
+  const agentId = request.agent?.agentId;
+  if (!agentId) {
+    response.status(401).json({ message: "Missing agent session." });
+    return;
+  }
+
+  const triage = await buildAgentTriage(agentId);
+  response.json(triage);
 });
 
 router.get("/transactions", requireAgentAuth, async (request, response) => {

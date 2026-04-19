@@ -20,7 +20,7 @@ export function LandingPage() {
       <section className="grid gap-6 lg:grid-cols-[1.3fr_0.9fr]">
         <Card className="overflow-hidden">
           <CardHeader className="space-y-4">
-            <Badge className="w-fit border-teal-200 bg-teal-50 text-teal-800">Phase 2 auth + seed live</Badge>
+            <Badge className="w-fit border-teal-200 bg-teal-50 text-teal-800">Phase 5 realtime triage live</Badge>
             <CardTitle className="max-w-3xl text-4xl leading-tight md:text-5xl">
               Closing Day gives agents live AI context before confusion becomes a lost deal.
             </CardTitle>
@@ -99,7 +99,7 @@ export function LandingPage() {
           {
             icon: RadioTower,
             title: "Realtime foundation",
-            body: "The singleton event bus is live and ready for SSE fanout in the triage and client portals."
+            body: "SSE fanout is live now, so the triage board reacts the moment a client opens a document, asks a question, or updates sentiment."
           }
         ].map((item) => (
           <Card key={item.title}>
