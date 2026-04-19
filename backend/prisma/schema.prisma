@@ -1,0 +1,190 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AgentAccount {
+  id           String         @id @default(cuid())
+  email        String         @unique
+  passwordHash String
+  firstName    String
+  lastName     String
+  brokerage    String?
+  loftyApiKey  String?
+  loftyUserId  String?
+  createdAt    DateTime       @default(now())
+  transactions Transaction[]
+  notifications Notification[]
+}
+
+model ClientAccount {
+  id                String       @id @default(cuid())
+  email             String       @unique
+  passwordHash      String?
+  firstName         String
+  lastName          String
+  phone             String?
+  preferredLanguage String       @default("en")
+  createdAt         DateTime     @default(now())
+  clientRoles       ClientRole[]
+}
+
+model Transaction {
+  id              String              @id @default(cuid())
+  agentId         String
+  agent           AgentAccount        @relation(fields: [agentId], references: [id])
+  role            String
+  propertyAddress String
+  propertyCity    String
+  propertyState   String
+  propertyZip     String
+  propertyPrice   Int?
+  stage           String
+  stageLabel      String
+  listedAt        DateTime?
+  contractAt      DateTime?
+  expectedCloseAt DateTime?
+  closedAt        DateTime?
+  source          String              @default("demo")
+  loftyEntityId   String?
+  createdAt       DateTime            @default(now())
+  clientRoles     ClientRole[]
+  documents       DocumentRecord[]
+  questions       Question[]
+  sentiments      SentimentEntry[]
+  botSessions     BotCallSession[]
+  portals         MagicLinkPortal[]
+  readiness       ReadinessSnapshot[]
+}
+
+model ClientRole {
+  id              String         @id @default(cuid())
+  transactionId   String
+  transaction     Transaction    @relation(fields: [transactionId], references: [id])
+  clientAccountId String
+  clientAccount   ClientAccount  @relation(fields: [clientAccountId], references: [id])
+  role            String
+  activatedAt     DateTime       @default(now())
+
+  @@unique([transactionId, clientAccountId])
+}
+
+model MagicLinkPortal {
+  id              String       @id @default(cuid())
+  transactionId   String
+  transaction     Transaction  @relation(fields: [transactionId], references: [id])
+  clientAccountId String
+  token           String       @unique
+  status          String       @default("active")
+  createdAt       DateTime     @default(now())
+  expiresAt       DateTime
+  lastOpenedAt    DateTime?
+}
+
+model DocumentRecord {
+  id                 String        @id @default(cuid())
+  transactionId      String
+  transaction        Transaction   @relation(fields: [transactionId], references: [id])
+  title              String
+  category           String
+  filePath           String
+  textContent        String
+  uploadedAt         DateTime      @default(now())
+  uploadedBy         String
+  summaryTlDr        String?
+  summaryJson        String?
+  summaryGeneratedAt DateTime?
+  summaryGeneratedBy String?
+  openedByClient     Boolean       @default(false)
+  openedAt           DateTime?
+  questionCount      Int           @default(0)
+  overriddenAt       DateTime?
+  overriddenBy       String?
+  questions          Question[]
+}
+
+model Question {
+  id                    String          @id @default(cuid())
+  transactionId         String
+  transaction           Transaction     @relation(fields: [transactionId], references: [id])
+  clientAccountId       String
+  documentId            String?
+  document              DocumentRecord? @relation(fields: [documentId], references: [id])
+  question              String
+  answer                String
+  nextStep              String?
+  category              String
+  severity              Int
+  requiresAgentFollowup Boolean
+  agentPrepNote         String
+  emotionalDistress     Boolean
+  propertyInterestSignal String
+  routedToAgent         Boolean
+  generatedBy           String
+  editedByAgent         Boolean         @default(false)
+  askedAt               DateTime        @default(now())
+}
+
+model SentimentEntry {
+  id                     String      @id @default(cuid())
+  transactionId          String
+  transaction            Transaction @relation(fields: [transactionId], references: [id])
+  clientAccountId        String
+  question               String
+  response               String
+  sentiment              String
+  confidence             Float
+  agentAlertNeeded       Boolean
+  alertReason            String
+  recommendedAgentAction String
+  derivedFromQuestionId  String?
+  generatedBy            String
+  createdAt              DateTime    @default(now())
+}
+
+model ReadinessSnapshot {
+  id                     String      @id @default(cuid())
+  transactionId          String
+  transaction            Transaction @relation(fields: [transactionId], references: [id])
+  clientAccountId        String
+  bucket                 String
+  reasoning              String
+  topConcerns            String
+  propertyInterestSignal String
+  recommendedAgentAction String
+  computedAt             DateTime    @default(now())
+}
+
+model BotCallSession {
+  id                String      @id @default(cuid())
+  transactionId     String
+  transaction       Transaction @relation(fields: [transactionId], references: [id])
+  clientAccountId   String
+  agentId           String
+  status            String
+  topConcerns       String
+  proposedSlots     String
+  tone              String
+  script            String
+  bookedSlot        DateTime?
+  clientNewQuestion String?
+  prepBrief         String?
+  createdAt         DateTime    @default(now())
+  concludedAt       DateTime?
+}
+
+model Notification {
+  id        String       @id @default(cuid())
+  agentId   String
+  agent     AgentAccount @relation(fields: [agentId], references: [id])
+  type      String
+  title     String
+  body      String
+  relatedId String?
+  read      Boolean      @default(false)
+  createdAt DateTime     @default(now())
+}

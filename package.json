@@ -1,0 +1,18 @@
+{
+  "name": "closing-day",
+  "version": "0.1.0",
+  "private": true,
+  "packageManager": "pnpm@10.11.0",
+  "scripts": {
+    "dev": "concurrently -k -n FRONTEND,BACKEND -c cyan,green \"corepack pnpm --filter @closing-day/frontend dev\" \"corepack pnpm --filter @closing-day/backend dev\"",
+    "build": "corepack pnpm -r build",
+    "typecheck": "corepack pnpm -r typecheck",
+    "db:migrate": "node scripts/prisma-runner.cjs migrate dev --name init",
+    "db:seed": "corepack pnpm --filter @closing-day/backend db:seed",
+    "db:reset": "node scripts/prisma-runner.cjs migrate reset --force --skip-seed && corepack pnpm --filter @closing-day/backend db:seed"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2",
+    "typescript": "^5.7.3"
+  }
+}

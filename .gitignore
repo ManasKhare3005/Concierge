@@ -1,0 +1,13 @@
+node_modules/
+dist/
+.turbo/
+.env
+.env.local
+
+backend/uploads/
+backend/prisma/dev.db
+backend/prisma/dev.db-journal
+backend/prisma/dev.db-shm
+backend/prisma/dev.db-wal
+
+frontend/.vite/
